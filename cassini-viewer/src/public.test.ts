@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { BADGE_HREF, BADGE_TEXT, ELEMENT_NAME, embedStylesheetHref, findEmbedScriptSrc } from "./public";
+import attributesDoc from "../ATTRIBUTES.md?raw";
+import {
+  BADGE_HREF,
+  BADGE_TEXT,
+  ELEMENT_NAME,
+  LIVE_ATTRIBUTES,
+  PLAYBACK_ERROR_EVENT,
+  embedStylesheetHref,
+  findEmbedScriptSrc,
+} from "./public";
 
 // The bootstrap is guarded on import.meta.env.VITEST, so importing this module
 // exercises the exported helpers without defining a custom element in node.
@@ -79,5 +88,12 @@ describe("the embed's published names", () => {
     expect(ELEMENT_NAME).toBe("cassini-meeting");
     expect(BADGE_HREF).toBe("https://gocassini.com");
     expect(BADGE_TEXT).toBe("Recorded with Cassini");
+    expect(PLAYBACK_ERROR_EVENT).toBe("playbackerror");
+    expect(attributesDoc).toContain("`playbackerror`");
+  });
+
+  it("follow a theme change, which a page with its own light/dark switch needs (D-838)", () => {
+    expect(LIVE_ATTRIBUTES).toEqual(["theme"]);
+    expect(attributesDoc).toContain("`theme` is the exception");
   });
 });

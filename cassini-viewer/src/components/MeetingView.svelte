@@ -68,6 +68,7 @@
   } from "../viewer/insights";
   import type { DataProvider } from "../viewer/dataProvider";
   import { buildViewerHash, readViewerHash, viewerUrlWithHash } from "../viewer/hashRouting";
+  import { eventIsInside, followScrollTop } from "../viewer/embedHost";
 
   // The single-meeting reading surface (D-420 V1). It is "smart": given a
   // DataProvider and a meeting entry (or bundled mode) it loads the artifact,
@@ -121,6 +122,9 @@
     enriched: MeetingCatalogEntry;
     openInsight: InsightRecord;
     tagsChanged: AnnotationResult;
+    // The audio would not play. Said out loud because the embed has no other
+    // way to tell the page around it; src/public.ts re-dispatches it (D-838).
+    playbackerror: string;
   }>();
   const marks = createMarksSession((result) => dispatch("tagsChanged", result));
   let openedMarksFor: string | null = null;
@@ -209,6 +213,7 @@
   // component's ROOT NODE — the shadow root in the embedded build, the document
   // in standalone — since document.getElementById can't see shadow-tree nodes.
   let viewRootEl: HTMLElement | undefined;
+  let scrollPaneEl: HTMLElement | undefined;
 
 
   // attemptedKey guards the reactive load: it is set to meeting.id BEFORE the
@@ -572,7 +577,9 @@
       return;
     }
     if (audioEl.paused) {
-      void audioEl.play();
+      void audioEl.play().catch(() => {
+        dispatch("playbackerror", "Playback could not start. Try again or download the audio file.");
+      });
       return;
     }
     audioEl.pause();
@@ -625,7 +632,24 @@
     const id = segmentDomId(segmentId);
     const root = viewRootEl?.getRootNode() as Document | ShadowRoot | undefined;
     const element = root?.getElementById?.(id) ?? document.getElementById(id);
+    // As an embed, scroll only our own pane: scrollIntoView would also scroll
+    // the page we are embedded in (D-838).
+    if (surface === "embed") {
+      if (element && scrollPaneEl) {
+        const top = followScrollTop(
+          scrollPaneEl.getBoundingClientRect(),
+          element.getBoundingClientRect(),
+          scrollPaneEl.scrollTop,
+        );
+        if (top !== null) scrollPaneEl.scrollTo({ top, behavior });
+      }
+      return;
+    }
     element?.scrollIntoView({ behavior, block: "center" });
+  }
+
+  function handleAudioError() {
+    dispatch("playbackerror", "This browser could not play the audio file. You can download it to listen in an Opus player.");
   }
 
   // Paused, the playhead is as often in a silence between turns as in one, and
@@ -673,6 +697,11 @@
     // whatever surface is actually visible (button activation, scrolling) and we
     // never toggle the hidden player's audio.
     if (!viewRootEl || viewRootEl.offsetParent === null) {
+      return;
+    }
+    // As an embed, Space is ours only when it was pressed inside the viewer;
+    // everywhere else on the page it scrolls the page (D-838).
+    if (surface === "embed" && !eventIsInside(event, viewRootEl)) {
       return;
     }
     if (keyboardEventTargetsControl(event)) {
@@ -983,6 +1012,7 @@
        `scrollbar-gutter: stable` reserves the scrollbar gutter persistently
        so content width never shifts as scrollbar appears/disappears. -->
   <div
+    bind:this={scrollPaneEl}
     bind:clientHeight={scrollHeight}
     bind:offsetWidth={scrollOuterWidth}
     bind:clientWidth={scrollInnerWidth}
@@ -1134,7 +1164,9 @@
     </div>
   {:else if transcriptIndex}
   <div out:fade={contentFadeConfig()}>
-  <main class="mv-main flex flex-col m-4 min-[981px]:mx-6 min-[981px]:mb-8">
+  <!-- A page embedding us has its own <main>; a second one is a landmark
+       screen readers would announce as the page's content (D-838). -->
+  <svelte:element this={surface === "embed" ? "div" : "main"} class="mv-main flex flex-col m-4 min-[981px]:mx-6 min-[981px]:mb-8">
     {#if summaryHtml}
       <!-- A card on the sheet's ground under a heading, like the insights and
            the transcript under it: three sections of one sheet, titled the
@@ -1425,7 +1457,7 @@
         </section>
       {/if}
     {/if}
-  </main>
+  </svelte:element>
   </div>
   {/if}
   </div>
@@ -1468,6 +1500,7 @@
             preload="metadata"
             src={audioSrc}
             on:durationchange={handleDurationChange}
+            on:error={handleAudioError}
             on:ended={handlePause}
             on:loadedmetadata={handleLoadedMetadata}
             on:pause={handlePause}

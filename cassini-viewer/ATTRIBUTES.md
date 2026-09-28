@@ -21,7 +21,22 @@ This file is the published surface. The implementation is
 | `hide-badge` | no | Present to remove the "Recorded with Cassini" footer | absent — the badge is shown |
 
 Attributes are read when the element enters the page. Changing one afterwards
-has no effect; replace the element instead.
+has no effect; replace the element instead. `theme` is the exception: set it
+again and the viewer follows, so a page with its own light/dark switch can keep
+the recording in step with it.
+
+## Events
+
+| Event | `detail` | When |
+|-------|----------|------|
+| `playbackerror` | `{ message }`, a sentence you can show a reader | The browser would not start or could not decode the audio. The viewer shows nothing for this itself. |
+
+The event bubbles from the `<cassini-meeting>` element:
+
+```js
+document.querySelector("cassini-meeting")
+  .addEventListener("playbackerror", (event) => showNotice(event.detail.message));
+```
 
 ## The badge
 
@@ -86,3 +101,9 @@ CSS does not reach into it. Size it from the outside:
 ```css
 cassini-meeting { display: block; height: 40rem; }
 ```
+
+The viewer stays inside its box. Space plays and pauses only when the reader
+pressed it inside the viewer; anywhere else on the page, it scrolls the page.
+Following playback scrolls the transcript inside the viewer, never the page
+around it. The viewer is not a `<main>` landmark, which belongs to the embedding
+page.

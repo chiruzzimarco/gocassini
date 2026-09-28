@@ -43,6 +43,14 @@ export const ELEMENT_NAME = "cassini-meeting";
 export const BADGE_HREF = "https://gocassini.com";
 export const BADGE_TEXT = "Recorded with Cassini";
 
+// Dispatched on the element when the recording's audio will not play (D-838).
+// The viewer shows no error of its own for this, so it is the page's to say.
+export const PLAYBACK_ERROR_EVENT = "playbackerror";
+
+// Attributes that take effect when changed after the element is on the page.
+// The rest are read once, on arrival (ATTRIBUTES.md).
+export const LIVE_ATTRIBUTES = ["theme"] as const;
+
 // The embed's own chrome. Deliberately NOT in app.css: this is the wrapper the
 // embed puts around MeetingView, and MeetingView must not grow a footer that
 // only one of its two surfaces ever shows. Colours come from the daisyUI theme
@@ -71,6 +79,10 @@ const EMBED_CSS = `
 }
 .cassini-embed-badge:hover, .cassini-embed-badge:focus-visible { opacity: 1; text-decoration: underline; }
 `;
+
+function prefersDarkScheme(): boolean {
+  return typeof window.matchMedia === "function" && window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
 
 // The served name, whatever version directory it sits in.
 const SCRIPT_PATTERN = /\/viewer\.js(?:\?.*)?$/;
@@ -124,7 +136,18 @@ export function defineCassiniMeeting(): void {
   }
 
   class CassiniMeetingElement extends HTMLElement {
+    static observedAttributes = [...LIVE_ATTRIBUTES];
+
     private app: Record<string, unknown> | null = null;
+    private wrapper: HTMLElement | null = null;
+
+    // A page with its own light/dark switch sets theme again when the reader
+    // flips it, so the viewer follows without being rebuilt (D-838).
+    attributeChangedCallback(name: string): void {
+      if (name === "theme" && this.wrapper) {
+        this.wrapper.dataset.theme = resolveEmbedTheme(this.getAttribute("theme"), prefersDarkScheme());
+      }
+    }
 
     connectedCallback(): void {
       if (this.app) {
@@ -154,15 +177,12 @@ export function defineCassiniMeeting(): void {
         shadow.appendChild(style);
       }
 
-      const prefersDark =
-        typeof window.matchMedia === "function" &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches;
-
       // data-theme sits on the wrapper rather than the mount, so the badge under
       // the viewer is themed with it rather than falling back to the default.
       const wrapper = document.createElement("div");
       wrapper.className = "cassini-embed";
-      wrapper.dataset.theme = resolveEmbedTheme(this.getAttribute("theme"), prefersDark);
+      wrapper.dataset.theme = resolveEmbedTheme(this.getAttribute("theme"), prefersDarkScheme());
+      this.wrapper = wrapper;
 
       const root = document.createElement("div");
       root.className = "cassini-root cassini-embed-view";
@@ -201,6 +221,13 @@ export function defineCassiniMeeting(): void {
           // would change one is absent.
           loadAnnotations: () => provider.loadMeetingAnnotations(entry),
           applyAnnotations: null,
+        },
+        events: {
+          playbackerror: (event: CustomEvent<string>) => {
+            this.dispatchEvent(
+              new CustomEvent(PLAYBACK_ERROR_EVENT, { detail: { message: event.detail }, bubbles: true }),
+            );
+          },
         },
       }) as Record<string, unknown>;
     }
