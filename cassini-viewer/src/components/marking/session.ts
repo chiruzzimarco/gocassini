@@ -53,7 +53,6 @@ const OFF: MarksState = { status: "off", annotations: null, error: "", errorFrom
 
 export interface MarksSessionOptions {
   schedule?: (write: () => Promise<void>) => Promise<void>;
-  notice?: (message: string) => void;
 }
 
 interface PendingMark {
@@ -156,7 +155,6 @@ export function createMarksSession(onChanged: (result: AnnotationResult) => void
 
   function report(action: PendingMark, message: string) {
     state.update((s) => ({ ...s, error: message, errorFrom: action.from }));
-    options.notice?.(message);
   }
 
   function queue(action: PendingMark) {
@@ -258,6 +256,7 @@ export function createMarksSession(onChanged: (result: AnnotationResult) => void
 
   return {
     subscribe: state.subscribe, open, write, receive, retryWrite,
+    dismissError() { if (!blocked) state.update((s) => ({ ...s, error: "" })); },
     retrySync: () => write({ ops: [], retrySync: true }),
     // A registry retains this session while the overlay is closed. Stop reads,
     // but keep writes and receipts alive so navigating cannot drop user intent.

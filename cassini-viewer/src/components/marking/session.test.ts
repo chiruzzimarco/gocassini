@@ -4,10 +4,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   AnnotationError,
   removeRequest,
-  markRequest,
-  moveStretchOps,
-  WHOLE_MEETING,
-  untagMeetingRequest,
   type AnnotationItem,
   type AnnotationRequest,
   type AnnotationResult,
