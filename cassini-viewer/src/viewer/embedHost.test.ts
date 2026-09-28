@@ -62,6 +62,12 @@ describe("MeetingView as an embed", () => {
     expect(body).toContain('element?.scrollIntoView({ behavior, block: "center" });');
   });
 
+  it("offers no way back to a meeting list as an embed, at any width", () => {
+    // Narrower than 720px the embed counts as not-desktop, and showed the app's
+    // "Back to meeting list" arrow, which did nothing on a page with no list.
+    expect(meetingViewSource).toContain('{#if !isDesktop && !inSheet && surface !== "embed"}');
+  });
+
   it("is not the page's <main> landmark as an embed", () => {
     expect(meetingViewSource).toContain('<svelte:element this={surface === "embed" ? "div" : "main"}');
   });

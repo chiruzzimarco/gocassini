@@ -1028,7 +1028,8 @@
          two pages at once. -->
     <header class="sticky top-0 z-20 flex-none min-h-12 px-4 py-3 min-[981px]:px-6 bg-base-200 border-b border-base-300" bind:offsetHeight={headerHeight}>
     <div class="flex items-center gap-2 min-w-0">
-    {#if !isDesktop && !inSheet}
+    <!-- An embed has no list to go back to, however narrow it is (D-838). -->
+    {#if !isDesktop && !inSheet && surface !== "embed"}
       <button
         on:click={() => dispatch("back")}
         class="btn btn-square btn-neutral btn-xs flex-none"
