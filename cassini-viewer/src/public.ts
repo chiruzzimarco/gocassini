@@ -55,7 +55,7 @@ export const LIVE_ATTRIBUTES = ["theme"] as const;
 // embed puts around MeetingView, and MeetingView must not grow a footer that
 // only one of its two surfaces ever shows. Colours come from the daisyUI theme
 // tokens so the badge follows `theme` with everything else.
-const EMBED_CSS = `
+export const EMBED_CSS = `
 :host { display: block; }
 .cassini-embed { display: flex; flex-direction: column; height: 100%; min-height: 0; }
 .cassini-embed-view { flex: 1 1 auto; min-height: 0; }
@@ -78,7 +78,70 @@ const EMBED_CSS = `
   transition: opacity 120ms ease;
 }
 .cassini-embed-badge:hover, .cassini-embed-badge:focus-visible { opacity: 1; text-decoration: underline; }
+
+/* Palette hooks (ATTRIBUTES.md, "Styling"). A page sets --cassini-color-* or
+   --cassini-font-sans on the element, and they inherit into this shadow root.
+   The theme's own value is first copied to a private property on the themed
+   wrapper, so anything the page does not set keeps the theme's value. */
+.cassini-embed {
+  --cassini-theme-base-100: var(--color-base-100);
+  --cassini-theme-base-200: var(--color-base-200);
+  --cassini-theme-base-300: var(--color-base-300);
+  --cassini-theme-base-content: var(--color-base-content);
+  --cassini-theme-primary: var(--color-primary);
+  --cassini-theme-primary-content: var(--color-primary-content);
+  --cassini-theme-font-sans: var(--font-sans);
+}
+.cassini-embed-view, .cassini-embed-badge {
+  --color-base-100: var(--cassini-color-base-100, var(--cassini-theme-base-100));
+  --color-base-200: var(--cassini-color-base-200, var(--cassini-theme-base-200));
+  --color-base-300: var(--cassini-color-base-300, var(--cassini-theme-base-300));
+  --color-base-content: var(--cassini-color-base-content, var(--cassini-theme-base-content));
+  --color-primary: var(--cassini-color-primary, var(--cassini-theme-primary));
+  --color-primary-content: var(--cassini-color-primary-content, var(--cassini-theme-primary-content));
+  --font-sans: var(--cassini-font-sans, var(--cassini-theme-font-sans));
+}
+/* font-family is resolved once, at the host, so re-point it where the
+   overridden --font-sans is in scope. */
+.cassini-embed-view { font-family: var(--font-sans); }
+
+/* layout="inline": the page around the viewer already names the recording and
+   shows its details, so the viewer keeps to the transcript and the player,
+   and the player sits above the transcript instead of floating over it.
+   The mv-* classes are MeetingView's hooks for exactly this. Unlayered, so
+   these rules beat Tailwind's layered utilities. The !important overrides
+   the inline right: the player sets to clear the scrollbar. */
+.cassini-embed[data-layout="inline"] .mv-title,
+.cassini-embed[data-layout="inline"] .mv-meta,
+.cassini-embed[data-layout="inline"] .mv-details { display: none; }
+.cassini-embed[data-layout="inline"] .mv-scroll { padding-bottom: 0; }
+.cassini-embed[data-layout="inline"] .mv-player {
+  position: relative;
+  order: -1;
+  right: auto !important;
+  padding: 0;
+  border-bottom: 1px solid var(--color-base-300);
+}
+.cassini-embed[data-layout="inline"] .mv-player > .card {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
 `;
+
+// The values layout accepts. Anything else is the default layout.
+export const LAYOUTS = ["inline"] as const;
+
+// The palette a page may set from outside (ATTRIBUTES.md, "Styling").
+export const PALETTE_PROPERTIES = [
+  "--cassini-color-base-100",
+  "--cassini-color-base-200",
+  "--cassini-color-base-300",
+  "--cassini-color-base-content",
+  "--cassini-color-primary",
+  "--cassini-color-primary-content",
+  "--cassini-font-sans",
+] as const;
 
 function prefersDarkScheme(): boolean {
   return typeof window.matchMedia === "function" && window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -182,6 +245,10 @@ export function defineCassiniMeeting(): void {
       const wrapper = document.createElement("div");
       wrapper.className = "cassini-embed";
       wrapper.dataset.theme = resolveEmbedTheme(this.getAttribute("theme"), prefersDarkScheme());
+      const layout = (this.getAttribute("layout") ?? "").trim().toLowerCase();
+      if ((LAYOUTS as readonly string[]).includes(layout)) {
+        wrapper.dataset.layout = layout;
+      }
       this.wrapper = wrapper;
 
       const root = document.createElement("div");

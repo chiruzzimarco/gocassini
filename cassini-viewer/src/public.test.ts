@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import attributesDoc from "../ATTRIBUTES.md?raw";
+import meetingViewSource from "./components/MeetingView.svelte?raw";
 import {
   BADGE_HREF,
   BADGE_TEXT,
   ELEMENT_NAME,
+  EMBED_CSS,
+  LAYOUTS,
   LIVE_ATTRIBUTES,
+  PALETTE_PROPERTIES,
   PLAYBACK_ERROR_EVENT,
   embedStylesheetHref,
   findEmbedScriptSrc,
@@ -95,5 +99,26 @@ describe("the embed's published names", () => {
   it("follow a theme change, which a page with its own light/dark switch needs (D-838)", () => {
     expect(LIVE_ATTRIBUTES).toEqual(["theme"]);
     expect(attributesDoc).toContain("`theme` is the exception");
+  });
+});
+
+describe("the embed's styling hooks (D-838)", () => {
+  it("consume every palette property ATTRIBUTES.md documents, falling back to the theme", () => {
+    for (const property of PALETTE_PROPERTIES) {
+      expect(attributesDoc).toContain(`\`${property}\``);
+      const token = property.replace("--cassini-color-", "--color-").replace("--cassini-font-sans", "--font-sans");
+      const theme = property.replace("--cassini-color-", "--cassini-theme-").replace("--cassini-font-sans", "--cassini-theme-font-sans");
+      expect(EMBED_CSS).toContain(`${token}: var(${property}, var(${theme}));`);
+      expect(EMBED_CSS).toContain(`${theme}: var(${token});`);
+    }
+  });
+
+  it("lay out inline with hooks MeetingView actually carries", () => {
+    expect(LAYOUTS).toEqual(["inline"]);
+    expect(attributesDoc).toContain('`layout`');
+    for (const hook of ["mv-title", "mv-meta", "mv-details", "mv-scroll", "mv-player"]) {
+      expect(EMBED_CSS).toContain(`.${hook}`);
+      expect(meetingViewSource).toMatch(new RegExp(`class="${hook}[ "]`));
+    }
   });
 });

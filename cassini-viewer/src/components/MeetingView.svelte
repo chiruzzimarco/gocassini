@@ -1016,7 +1016,7 @@
     bind:clientHeight={scrollHeight}
     bind:offsetWidth={scrollOuterWidth}
     bind:clientWidth={scrollInnerWidth}
-    class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain pb-40 min-[981px]:pb-32 scroll-stable flex flex-col">
+    class="mv-scroll flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain pb-40 min-[981px]:pb-32 scroll-stable flex flex-col">
     <!-- Sticky header — the meeting's identity, and the transcript flows under
          it. It used to be a strip of status badges with the title in a second,
          SCROLLING header below, so the one thing that says which meeting you
@@ -1039,7 +1039,7 @@
       </button>
     {/if}
 
-    <h1 class="flex-1 min-w-0 truncate text-lg font-bold min-[981px]:text-xl">
+    <h1 class="mv-title flex-1 min-w-0 truncate text-lg font-bold min-[981px]:text-xl">
       {meeting ? meeting.title : "Meeting transcript viewer"}
     </h1>
 
@@ -1382,7 +1382,7 @@
       </div>
 
       {#if visibleSegments.length > 0 && transcriptIndex && (timingPrecision || artifactMetadata)}
-        <section class="grid gap-3 mt-8">
+        <section class="mv-details grid gap-3 mt-8">
           <div class="border-b border-base-300 pb-3">
             <p class="text-lg font-medium text-base-content">
               Meeting metadata
@@ -1488,7 +1488,7 @@
   <footer
     bind:offsetHeight={playerHeight}
     style:right="{scrollGutter}px"
-    class="absolute bottom-0 left-0 z-30 p-2 min-[981px]:px-4 min-[981px]:pb-4 pointer-events-none [will-change:opacity]"
+    class="mv-player absolute bottom-0 left-0 z-30 p-2 min-[981px]:px-4 min-[981px]:pb-4 pointer-events-none [will-change:opacity]"
     transition:fade={playerFadeConfig()}
   >
     <div class="card bg-base-100 shadow-2xl p-2 border border-base-300 pointer-events-auto relative">
