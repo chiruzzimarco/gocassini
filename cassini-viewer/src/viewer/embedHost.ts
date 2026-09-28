@@ -39,3 +39,14 @@ export function followScrollTop(
   const height = pane.bottom - pane.top;
   return Math.max(0, paneScrollTop + element.top - pane.top - height / 3);
 }
+
+/**
+ * Whether the viewer may read and write the page's URL fragment. Inside the
+ * app it is the viewer's own route (hashRouting.ts). On a host page it holds
+ * that page's anchors: an embed that rewrote it would replace the reader's
+ * #section with #tx=…, and one that read it would take a stray tx or t there
+ * as its own.
+ */
+export function ownsLocationHash(surface: "app" | "embed"): boolean {
+  return surface === "app";
+}

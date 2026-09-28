@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import meetingViewSource from "../components/MeetingView.svelte?raw";
-import { eventIsInside, followScrollTop } from "./embedHost";
+import { eventIsInside, followScrollTop, ownsLocationHash } from "./embedHost";
 
 const root = { id: "viewer" } as unknown as EventTarget;
 const inViewer = { composedPath: () => [{}, root, {}] as EventTarget[] };
@@ -45,6 +45,13 @@ describe("followScrollTop", () => {
   });
 });
 
+describe("ownsLocationHash", () => {
+  it("gives the app its hash route and leaves an embed's host page its anchors", () => {
+    expect(ownsLocationHash("app")).toBe(true);
+    expect(ownsLocationHash("embed")).toBe(false);
+  });
+});
+
 describe("MeetingView as an embed", () => {
   it("asks before taking Space, and only as an embed", () => {
     const handler = meetingViewSource.slice(meetingViewSource.indexOf("function handleWindowKeydown"));
@@ -76,5 +83,16 @@ describe("MeetingView as an embed", () => {
     expect(meetingViewSource).toContain("playbackerror: string;");
     expect(meetingViewSource).toContain("void audioEl.play().catch(");
     expect(meetingViewSource).toContain("on:error={handleAudioError}");
+  });
+
+  it("reads the page's fragment only through hostHash, and writes it only when it owns it", () => {
+    // One raw read, inside hostHash itself; every other read goes through it.
+    expect(meetingViewSource.match(/window\.location\.hash/g)).toHaveLength(1);
+    expect(meetingViewSource).toContain("return ownsHash ? window.location.hash : \"\";");
+    for (const writer of ["function writeTranscriptUrlParam", "function clearTranscriptUrlParam"]) {
+      const body = meetingViewSource.slice(meetingViewSource.indexOf(writer));
+      expect(body.slice(0, body.indexOf("\n  }\n"))).toContain("if (!ownsHash) return;");
+    }
+    expect(meetingViewSource.match(/window\.history\.replaceState/g)).toHaveLength(2);
   });
 });

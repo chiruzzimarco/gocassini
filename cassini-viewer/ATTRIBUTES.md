@@ -131,4 +131,5 @@ The viewer stays inside its box. Space plays and pauses only when the reader
 pressed it inside the viewer; anywhere else on the page, it scrolls the page.
 Following playback scrolls the transcript inside the viewer, never the page
 around it. The viewer is not a `<main>` landmark, which belongs to the embedding
-page.
+page. It never reads or changes the page's URL fragment, so the page's
+own `#anchors` keep working.

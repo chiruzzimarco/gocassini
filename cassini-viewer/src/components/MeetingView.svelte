@@ -68,7 +68,7 @@
   } from "../viewer/insights";
   import type { DataProvider } from "../viewer/dataProvider";
   import { buildViewerHash, readViewerHash, viewerUrlWithHash } from "../viewer/hashRouting";
-  import { eventIsInside, followScrollTop } from "../viewer/embedHost";
+  import { eventIsInside, followScrollTop, ownsLocationHash } from "../viewer/embedHost";
 
   // The single-meeting reading surface (D-420 V1). It is "smart": given a
   // DataProvider and a meeting entry (or bundled mode) it loads the artifact,
@@ -243,8 +243,19 @@
 
   // Routing is hash-only (see src/viewer/hashRouting.ts for why and the wire
   // format). These thin wrappers bind the pure helpers to the live location.
+  //
+  // As an embed the fragment is the host page's: its own anchors, which we
+  // must neither read as ours nor rewrite (D-838). Every read goes through
+  // hostHash() and every write checks ownsLocationHash, so an embed keeps its
+  // transcript choice and start time to itself.
+  $: ownsHash = ownsLocationHash(surface);
+
+  function hostHash(): string {
+    return ownsHash ? window.location.hash : "";
+  }
+
   function currentViewerHash() {
-    return readViewerHash(window.location.hash);
+    return readViewerHash(hostHash());
   }
 
   function viewerHref(hash: string): string {
@@ -406,7 +417,7 @@
     resetLoadedArtifact();
     loading = true;
     errorMessage = "";
-    pendingSeekMs = parseTimeHash(window.location.hash);
+    pendingSeekMs = parseTimeHash(hostHash());
     try {
       const artifact = await dataProvider.loadMeetingForEntry(entry);
       applyArtifact(artifact);
@@ -424,7 +435,7 @@
   async function loadBundled() {
     loading = true;
     errorMessage = "";
-    pendingSeekMs = parseTimeHash(window.location.hash);
+    pendingSeekMs = parseTimeHash(hostHash());
     try {
       const artifact = await dataProvider.loadBundledArtifact();
       applyArtifact(artifact);
@@ -465,6 +476,7 @@
   }
 
   function writeTranscriptUrlParam(targetId: string) {
+    if (!ownsHash) return;
     const current = currentViewerHash();
     const tx = targetId && targetId !== defaultTranscriptId ? targetId : "";
     window.history.replaceState(
@@ -475,6 +487,7 @@
   }
 
   function clearTranscriptUrlParam() {
+    if (!ownsHash) return;
     const current = currentViewerHash();
     if (current.tx) {
       window.history.replaceState(
