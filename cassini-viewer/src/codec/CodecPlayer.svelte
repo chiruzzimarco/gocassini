@@ -235,6 +235,8 @@
   async function dial(entry: MeetingCatalogEntry) {
     if (call === "ringing") return;
     audio?.pause();
+    // Stay tuned to the frequency just picked while it rings and loads.
+    freqKey = entry.id;
     view = "call";
     phase = "loading";
     call = "ringing";
