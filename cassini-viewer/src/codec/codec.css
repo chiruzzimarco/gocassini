@@ -586,3 +586,12 @@
   content: " ◉";
   color: var(--g3);
 }
+
+/* An arrow lights up as the cursor walks the MEMORY list that way. */
+.codec .arrow.lit {
+  color: var(--g4);
+  border-color: var(--g3);
+  background: var(--g1);
+  box-shadow: 0 0 calc(0.8 * var(--u)) rgb(120 210 120 / 0.6);
+  text-shadow: var(--glow);
+}

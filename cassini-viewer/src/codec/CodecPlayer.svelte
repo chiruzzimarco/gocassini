@@ -315,11 +315,18 @@
     onexit();
   }
 
+  // The arrow on the side the cursor moved lights up for a moment.
+  let arrowLit = $state<-1 | 0 | 1>(0);
+  let arrowTimer: ReturnType<typeof setTimeout> | undefined;
+
   function moveCursor(by: number) {
     if (!entries.length) return;
     const next = (cursor + by + entries.length) % entries.length;
     if (next === cursor) return;
     cursor = next;
+    clearTimeout(arrowTimer);
+    arrowLit = by < 0 ? -1 : 1;
+    arrowTimer = setTimeout(() => (arrowLit = 0), 180);
     const ctx = ensureCtx();
     if (ctx) tuneBlip(ctx);
   }
@@ -587,7 +594,7 @@
       <div class="console" style="order:1">
         <div class="rail"><span class="ctab ptt">PTT</span></div>
         <div class="tuner">
-          <button class="arrow" aria-label="Previous frequency" disabled={view !== "memory"} onclick={() => moveCursor(-1)}>◀</button>
+          <button class="arrow" class:lit={arrowLit === -1} aria-label="Previous frequency" disabled={view !== "memory"} onclick={() => moveCursor(-1)}>◀</button>
           <div class="display">
             <div class="meter" aria-hidden="true">
               {#each Array(METER_BARS) as _, i (i)}
@@ -599,7 +606,7 @@
             </div>
             <div class="freq"><SevenSeg value={frequency} /></div>
           </div>
-          <button class="arrow" aria-label="Next frequency" disabled={view !== "memory"} onclick={() => moveCursor(1)}>▶</button>
+          <button class="arrow" class:lit={arrowLit === 1} aria-label="Next frequency" disabled={view !== "memory"} onclick={() => moveCursor(1)}>▶</button>
         </div>
         <div class="rail">
           <button
