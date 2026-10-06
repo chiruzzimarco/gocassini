@@ -9,6 +9,7 @@
   --g3: #83c7ac;
   --g4: #c6f7e6;
   --rail: #234436;
+  --panel: #141c19;
   --text: #e4e4e4;
   --glow: 0 0 6px rgb(131 199 172 / 0.7);
   color-scheme: dark;
@@ -248,7 +249,7 @@
   position: relative;
   width: calc(19 * var(--u));
   aspect-ratio: 3 / 2;
-  background: #1e2723;
+  background: var(--panel);
   box-shadow: inset 0 0 calc(0.6 * var(--u)) rgb(0 0 0 / 0.6);
 }
 
@@ -274,27 +275,28 @@
   bottom: calc(-0.6 * var(--u));
 }
 
-/* Signal meter: bars stacked top to bottom, shortening along a curve, lit
- * from the bottom up with the voice level. */
+/* Signal meter: drawn in Meter markup (an SVG), stretched to the panel. */
 .codec .meter {
   position: absolute;
-  left: 6%;
-  right: 6%;
-  top: 8%;
-  bottom: 8%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  left: 5%;
+  right: 5%;
+  top: 7%;
+  bottom: 7%;
+  width: 90%;
+  height: 86%;
 }
 
-.codec .meter span {
-  height: 6%;
-  background: var(--g1);
+.codec .meter rect {
+  fill: #2c5244;
 }
 
-.codec .meter span.on {
-  background: var(--g3);
-  box-shadow: 0 0 4px rgb(131 199 172 / 0.6);
+.codec .meter rect.on {
+  fill: #b9f5df;
+}
+
+/* The dark area the bars stop at: the panel's own colour. */
+.codec .meter .shade {
+  fill: var(--panel);
 }
 
 /* Digits sit bottom right, inside the curve the bars leave open. */

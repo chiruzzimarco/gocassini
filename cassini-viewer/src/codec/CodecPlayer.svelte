@@ -33,9 +33,7 @@
   // A finished line stays on screen this long after its last word.
   const HOLD_MS = 1500;
   const FLAP_MS = 110;
-  const METER_BARS = 9;
-  // Bars shorten along a curve from the top, clearing the digits below.
-  const meterWidth = (i: number) => 100 - 78 * Math.min(1, i / (METER_BARS - 1) / 0.5) ** 0.6;
+  const METER_BARS = 10;
 
   let phase = $state<"idle" | "loading" | "ready" | "error">("idle");
   // MEMORY is the contact list; a call is one meeting playing.
@@ -618,14 +616,22 @@
         <div class="tuner">
           <button class="arrow" class:lit={arrowLit === -1} aria-label="Previous frequency" disabled={view !== "memory"} onclick={() => moveCursor(-1)}>◀</button>
           <div class="display">
-            <div class="meter" aria-hidden="true">
+            <!-- Full-width bars with a dark quarter-ellipse laid over the lower
+                 right: every bar ends on the same smooth curve, as on the
+                 codec, and the digits sit inside the dark area. Lit from the
+                 bottom up with the voice. -->
+            <svg class="meter" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
               {#each Array(METER_BARS) as _, i (i)}
-                <span
+                <rect
                   class:on={(METER_BARS - 1 - i) < level * METER_BARS}
-                  style="width:{meterWidth(i)}%"
-                ></span>
+                  x="0"
+                  y={i * (100 / METER_BARS) + (100 / METER_BARS) * 0.13}
+                  width="100"
+                  height={(100 / METER_BARS) * 0.74}
+                />
               {/each}
-            </div>
+              <ellipse class="shade" cx="100" cy="100" rx="86" ry="82" />
+            </svg>
             <div class="freq"><SevenSeg value={frequency} /></div>
           </div>
           <button class="arrow" class:lit={arrowLit === 1} aria-label="Next frequency" disabled={view !== "memory"} onclick={() => moveCursor(1)}>▶</button>
