@@ -121,8 +121,6 @@
       for (const ev of ["pointerdown", "keydown", "drop"]) window.addEventListener(ev, retry, true);
     });
   }
-  let photoInput: HTMLInputElement | undefined = $state();
-  let photoFor: string | null = null;
   let audioCtx: AudioContext | null = null;
   let analyser: AnalyserNode | null = null;
   let lastSpeaker: string | null = null;
@@ -464,19 +462,6 @@
     return true;
   }
 
-  async function onPhotoPicked(list: FileList | null) {
-    const file = list?.[0];
-    if (file && photoFor) portraits = { ...portraits, [photoFor]: await portraitFromImage(file) };
-    photoFor = null;
-    if (photoInput) photoInput.value = "";
-  }
-
-  function pickPhoto(id: string | null) {
-    if (!id) return;
-    photoFor = id;
-    photoInput?.click();
-  }
-
   function ensureCtx(): AudioContext | null {
     if (!audioCtx) {
       try {
@@ -681,14 +666,7 @@
       {#each [0, 1] as side (side)}
         {@const id = slots[side]}
         <div class="seat" style="order:{side === 0 ? 0 : 2}">
-          <button
-            class="portrait"
-            class:live={id !== null && id === speaking}
-            class:empty={!id}
-            title={id ? `${labelOf(id)} (click to use a photo)` : ""}
-            onclick={() => pickPhoto(id)}
-            disabled={!id}
-          >
+          <div class="portrait" class:live={id !== null && id === speaking} class:empty={!id}>
             {#if call === "open" && cuts[side] > 0}
               {#key `${id}:${cuts[side]}`}
                 <Static />
@@ -709,7 +687,7 @@
                    dead channel. -->
               <Static endless />
             {/if}
-          </button>
+          </div>
           <!-- Names belong to the faces: only while the call is connected. -->
           <span class="name">{call === "open" && !closing ? labelOf(id) : ""}</span>
         </div>
@@ -855,5 +833,4 @@
     }}
     onerror={() => console.info(`codec: no background track at ${MUSIC_URL}`)}
   ></audio>
-  <input bind:this={photoInput} type="file" accept="image/*" hidden onchange={(e) => onPhotoPicked(e.currentTarget.files)} />
 </main>

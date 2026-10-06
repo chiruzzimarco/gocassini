@@ -82,11 +82,9 @@
     inset 0 0 0 calc(0.2 * var(--u)) #000;
   background: var(--g0);
   overflow: hidden;
-  cursor: pointer;
 }
 
 .codec .portrait.empty {
-  cursor: default;
   border-color: var(--g1);
   box-shadow: none;
   background: repeating-linear-gradient(0deg, var(--g0) 0 3px, var(--g1) 3px 4px);
