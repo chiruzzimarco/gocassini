@@ -168,8 +168,10 @@
   content: "";
   position: absolute;
   z-index: 0;
-  left: calc(-1.4 * var(--u));
-  right: calc(-1.4 * var(--u));
+  /* In standby it hugs the centre unit; in a call it reaches out behind the
+   * portraits (below). */
+  left: calc(13 * var(--u));
+  right: calc(13 * var(--u));
   top: calc(0.15 * var(--u));
   bottom: calc(0.15 * var(--u));
   border: 1px solid #3d4843;
@@ -429,11 +431,54 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .codec .screen:not(.standby) .portrait {
-    animation: none;
+/* The outline draws out to the portraits as a call opens (just before they
+ * appear) and back in around the centre unit as it closes (just after they
+ * fold away), in a few steps like the rest. */
+.codec .screen:not(.standby) .unit::before {
+  left: calc(-1.4 * var(--u));
+  right: calc(-1.4 * var(--u));
+  transition:
+    left 130ms steps(4, jump-start) 300ms,
+    right 130ms steps(4, jump-start) 300ms;
+}
+
+/* Closing: the meter is already dark; the portraits fold to a strip across
+ * their middle and vanish, then the outline draws in. */
+.codec .screen.closing .portrait {
+  animation: codec-portrait-close 180ms steps(6, jump-start) both;
+}
+
+.codec .screen.closing .unit::before {
+  left: calc(13 * var(--u));
+  right: calc(13 * var(--u));
+  transition:
+    left 130ms steps(4, jump-start) 190ms,
+    right 130ms steps(4, jump-start) 190ms;
+}
+
+@keyframes codec-portrait-close {
+  from {
+    visibility: visible;
+    transform: scaleY(1);
+    filter: none;
+  }
+  to {
+    visibility: hidden;
+    transform: scaleY(0.06);
+    filter: brightness(1.7) blur(1.2px);
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .codec .screen:not(.standby) .portrait,
+  .codec .screen.closing .portrait {
+    animation: none;
+  }
+  .codec .screen .unit::before {
+    transition: none;
+  }
+}
+
 
 .codec .prompt {
   font-size: 0.6em;

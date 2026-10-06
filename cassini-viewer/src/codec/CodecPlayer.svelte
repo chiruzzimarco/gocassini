@@ -248,7 +248,9 @@
 
   // Dial a meeting from MEMORY: ring while it loads, then open the link.
   async function dial(entry: MeetingCatalogEntry) {
-    if (call === "ringing") return;
+    if (call === "ringing" || closing) return;
+    // Another meeting already on the line closes first, then the new one rings.
+    await closeCall();
     audio?.pause();
     // Stay tuned to the frequency just picked while it rings and loads.
     freqKey = entry.id;
@@ -290,10 +292,28 @@
 
   // Hang up and go back to the list, cursor still on the meeting just called.
   // From the call, or from MEMORY open over it.
-  function hangup() {
-    if (!entries.length || call === "ringing" || (view !== "call" && call !== "open")) return;
+  // Closing a call, as the codec does: the meter goes dark, the portraits fold
+  // to a strip and vanish, the outline draws in around the centre unit, and
+  // the unit dims (codec.css, .closing). Resolves once it is back to standby.
+  let closing = $state(false);
+  const CLOSE_MS = 440;
+  const reducedMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+
+  async function closeCall() {
+    if (call !== "open" || closing) return;
     audio?.pause();
     if (audioCtx) hangUp(audioCtx);
+    closing = true;
+    await new Promise((r) => setTimeout(r, reducedMotion() ? 0 : CLOSE_MS));
+    closing = false;
+    call = "off";
+  }
+
+  // Hang up (HANG UP, Escape, or the end of the recording) and go back to the
+  // list, cursor still on the meeting just called.
+  async function hangup() {
+    if (!entries.length || call === "ringing" || closing || (view !== "call" && call !== "open")) return;
+    await closeCall();
     call = "off";
     view = "memory";
     const at = entries.findIndex((e) => e.id === freqKey);
@@ -537,7 +557,7 @@
     // rather than flashing on the first sound of the meeting.
     const sinceOpen = now - openedAt;
     level =
-      call !== "open" ? voice : sinceOpen < RISE_MS ? powerUp(now) : Math.max(voice, powerUp(now));
+      call !== "open" || closing ? (closing ? 0 : voice) : sinceOpen < RISE_MS ? powerUp(now) : Math.max(voice, powerUp(now));
     raf = requestAnimationFrame(frame);
   }
 
@@ -593,7 +613,13 @@
     void onFiles(e.dataTransfer?.files);
   }}
 >
-  <div class="screen" class:ringing={call === "ringing"} class:standby={call !== "open"} class:memory={view === "memory"}>
+  <div
+    class="screen"
+    class:ringing={call === "ringing"}
+    class:standby={call !== "open"}
+    class:closing
+    class:memory={view === "memory"}
+  >
     <div class="unit">
       {#each [0, 1] as side (side)}
         {@const id = slots[side]}
@@ -612,7 +638,7 @@
               {/key}
             {/if}
             {#if id && call === "open"}
-              <Interference active={call === "open"} />
+              <Interference active={call === "open" && !closing} />
             {/if}
             {#if id && portraits[id] && call === "open"}
               <img
@@ -628,7 +654,7 @@
             {/if}
           </button>
           <!-- Names belong to the faces: only while the call is connected. -->
-          <span class="name">{call === "open" ? labelOf(id) : ""}</span>
+          <span class="name">{call === "open" && !closing ? labelOf(id) : ""}</span>
         </div>
       {/each}
 
@@ -711,7 +737,7 @@
         <span class="prompt">PRESS CALL TO CONNECT</span>
       {:else if phase === "error"}
         Signal lost: {error}
-      {:else}
+      {:else if !closing}
         {revealed}
       {/if}
     </div>
@@ -744,7 +770,12 @@
     preload="auto"
     onplay={() => (playing = true)}
     onpause={() => (playing = false)}
-    onended={() => (playing = false)}
+    onended={() => {
+      playing = false;
+      // The recording is over: close the call as the codec does.
+      if (entries.length) void hangup();
+      else void closeCall();
+    }}
     onloadedmetadata={() => audio && Number.isFinite(audio.duration) && (durationMs = audio.duration * 1000)}
   ></audio>
   <!-- Optional local background track, looping from page load. -->
