@@ -1,71 +1,55 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
-  // Interference on the link: now and then a few soft horizontal lines drift
-  // up or down a portrait for a few seconds, then the picture clears again,
-  // whoever is speaking. Each portrait gets its own random episodes; active
-  // is whether the call is open at all.
+  // The codec's scan lines, as measured on footage of the game: a wide, soft
+  // bright band drifting slowly down the picture and a thin sharp line moving
+  // about twice as fast, overtaking it. Both always run top to bottom, on a
+  // fixed cycle, and are driven by the page clock, so every portrait shows them
+  // at the same height at the same moment. `active` is whether the call is open.
   let { active = false }: { active?: boolean } = $props();
 
-  // How long an episode lasts, and the clear spell between two, in ms.
-  const EPISODE_MS = [1200, 4500];
-  const CLEAR_MS = [1500, 7000];
-  const between = ([lo, hi]: number[]) => lo + Math.random() * (hi - lo);
+  // Seconds per pass, and how much of the picture's height each one covers.
+  const BAND_PERIOD = 7.6;
+  const BAND_HEIGHT = 0.13;
+  const LINE_PERIOD = 4.75; // the line crosses in LINE_TRAVEL, then is gone for the rest
+  const LINE_TRAVEL = 3.3;
 
   const W = 104;
   const H = 160;
-  const LINES = 3;
   let canvas: HTMLCanvasElement;
-
-  interface Line {
-    y: number;
-    speed: number; // canvas px per frame; negative runs up
-    thickness: number;
-    alpha: number;
-  }
-
-  const spawn = (y = Math.random() * H): Line => ({
-    y,
-    speed: (Math.random() < 0.5 ? -1 : 1) * (0.25 + Math.random() * 0.6),
-    thickness: 1 + Math.floor(Math.random() * 2),
-    alpha: 0.18 + Math.random() * 0.17,
-  });
 
   onMount(() => {
     const ctx = canvas.getContext("2d")!;
-    const lines = Array.from({ length: LINES }, () => spawn());
     let strength = 0;
     let raf = 0;
-    let interfering = false;
-    // Start clear, so the two portraits don't light up together on connect.
-    let switchAt = performance.now() + between(CLEAR_MS);
-    let peak = 1;
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
-      if (now >= switchAt) {
-        interfering = !interfering;
-        switchAt = now + between(interfering ? EPISODE_MS : CLEAR_MS);
-        peak = 0.6 + Math.random() * 0.4;
-      }
-      // Ease towards the target so the lines fade rather than snap.
-      const target = active && interfering ? peak : 0;
-      strength += (target - strength) * 0.12;
+      // Fade in when the call opens and out when it closes, rather than snap.
+      strength += ((active ? 1 : 0) - strength) * 0.1;
       ctx.clearRect(0, 0, W, H);
       if (strength < 0.01) return;
-      for (const line of lines) {
-        line.y += line.speed;
-        // Off one edge: come back in from the other, sometimes reshuffled.
-        if (line.y < -4 || line.y > H + 4) {
-          Object.assign(line, Math.random() < 0.3 ? spawn() : {}, { y: line.y < 0 ? H + 3 : -3 });
-        }
-        const a = line.alpha * strength;
-        const y = Math.round(line.y);
-        ctx.fillStyle = `rgba(200, 255, 190, ${a})`;
-        ctx.fillRect(0, y, W, line.thickness);
-        // A faint halo either side keeps the line soft.
-        ctx.fillStyle = `rgba(200, 255, 190, ${a * 0.35})`;
-        ctx.fillRect(0, y - 1, W, 1);
-        ctx.fillRect(0, y + line.thickness, W, 1);
+      const t = now / 1000;
+
+      // The band: enters from above, leaves below, and comes round again.
+      const band = BAND_HEIGHT * H;
+      const by = ((t % BAND_PERIOD) / BAND_PERIOD) * (H + band) - band;
+      const grad = ctx.createLinearGradient(0, by, 0, by + band);
+      grad.addColorStop(0, "rgba(200, 255, 190, 0)");
+      grad.addColorStop(0.35, `rgba(200, 255, 190, ${0.27 * strength})`);
+      grad.addColorStop(0.65, `rgba(200, 255, 190, ${0.27 * strength})`);
+      grad.addColorStop(1, "rgba(200, 255, 190, 0)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, by, W, band);
+
+      // The line: a sharp pass down the picture, then a pause before the next.
+      const phase = t % LINE_PERIOD;
+      if (phase < LINE_TRAVEL) {
+        const ly = Math.round((phase / LINE_TRAVEL) * H);
+        ctx.fillStyle = `rgba(215, 255, 205, ${0.4 * strength})`;
+        ctx.fillRect(0, ly, W, 1);
+        ctx.fillStyle = `rgba(215, 255, 205, ${0.12 * strength})`;
+        ctx.fillRect(0, ly - 1, W, 1);
+        ctx.fillRect(0, ly + 1, W, 1);
       }
     };
     raf = requestAnimationFrame(frame);

@@ -592,7 +592,7 @@
               {/key}
             {/if}
             {#if id && call === "open"}
-              <Interference active={playing} />
+              <Interference active={call === "open"} />
             {/if}
             {#if id && portraits[id] && call === "open"}
               <img
