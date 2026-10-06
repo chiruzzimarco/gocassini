@@ -18,3 +18,6 @@ public/captions.vtt
 public/chapters.vtt
 public/timeline.map.v1.json
 public/manifest.json
+
+# Codec sound effects are supplied locally, never committed (game audio).
+public/codec-sfx/

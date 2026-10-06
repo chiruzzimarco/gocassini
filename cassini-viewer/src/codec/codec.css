@@ -1,0 +1,467 @@
+.codec {
+  --bg: #000;
+  --g0: #04140a;
+  --g1: #124624;
+  --g2: #348c46;
+  --g3: #78d278;
+  --g4: #c8ffbe;
+  --rail: #1d4a2a;
+  --text: #e4e4e4;
+  --glow: 0 0 6px rgb(120 210 120 / 0.7);
+  color-scheme: dark;
+}
+
+.codec,
+.codec * {
+  box-sizing: border-box;
+}
+
+
+.codec {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Helvetica, Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 16px;
+}
+
+.codec.dragging .screen {
+  outline: 2px dashed var(--g3);
+  outline-offset: 8px;
+}
+
+/* The game screen: black 16:9, the codec unit in the upper middle, the line
+ * of dialogue under it. Sizes are in cqw so it scales as one picture. */
+.codec .screen {
+  position: relative;
+  width: min(1100px, 100%);
+  aspect-ratio: 16 / 9;
+  container-type: inline-size;
+  background: #000;
+  overflow: hidden;
+}
+
+.codec .unit {
+  position: absolute;
+  left: 50%;
+  top: 15%;
+  width: 63cqw;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: stretch;
+}
+
+/* ── Portraits ─────────────────────────────────────────────────────────── */
+
+.codec .seat {
+  position: relative;
+  flex: 0 0 14cqw;
+}
+
+.codec .portrait {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 13 / 20;
+  padding: 0;
+  border: 0.35cqw solid var(--g3);
+  border-radius: 0.5cqw;
+  box-shadow:
+    0 0 1.4cqw rgb(120 210 120 / 0.55),
+    inset 0 0 0 0.2cqw #000;
+  background: var(--g0);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.codec .portrait.empty {
+  cursor: default;
+  border-color: var(--g1);
+  box-shadow: none;
+  background: repeating-linear-gradient(0deg, var(--g0) 0 3px, var(--g1) 3px 4px);
+}
+
+.codec .portrait img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+/* Fine scanlines over the picture, like the CRT it sits on. */
+.codec .portrait::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, transparent 0 2px, rgb(0 0 0 / 0.3) 2px 3px);
+}
+
+.codec .seat .name {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 0.8cqw);
+  font-size: 1.1cqw;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--g2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Middle console: rails, PTT / MEMORY tabs, arrows, display ────────── */
+
+.codec .console {
+  flex: 1;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: 0.3cqw 0;
+}
+
+.codec .rail {
+  position: relative;
+  height: 2.4cqw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Two thin rules running from one portrait to the other. */
+.codec .rail::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 0.55cqw;
+  transform: translateY(-50%);
+  border-top: 1px solid var(--rail);
+  border-bottom: 1px solid var(--rail);
+}
+
+.codec .ctab {
+  position: relative;
+  padding: 0.15cqw 1.6cqw;
+  font-weight: bold;
+  font-size: 1.6cqw;
+  letter-spacing: 0.35em;
+  text-indent: 0.35em;
+  background: #000;
+}
+
+.codec .ctab.ptt {
+  color: #e8e8e8;
+  border: 1px solid #6c6c6c;
+  background: linear-gradient(#2a2a2a, #111);
+}
+
+.codec .ctab.memory {
+  color: #4f6c58;
+  border: 1px solid #2c3d31;
+  background: linear-gradient(#1a221c, #0b0f0c);
+}
+
+.codec .tuner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.6cqw;
+}
+
+.codec .arrow {
+  font-size: 1.5cqw;
+  color: #4f6c58;
+  border: 1px solid #2c3d31;
+  padding: 0.3cqw 0.7cqw;
+  background: #0b0f0c;
+}
+
+.codec .display {
+  position: relative;
+  width: 19cqw;
+  aspect-ratio: 3 / 2;
+  border: 0.25cqw solid #5c5c5c;
+  background: var(--g0);
+  box-shadow: inset 0 0 1.2cqw rgb(0 0 0 / 0.8);
+  overflow: hidden;
+}
+
+/* Signal meter: bars stacked top to bottom, shortening along a curve, lit
+ * from the bottom up with the voice level. */
+.codec .meter {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  top: 8%;
+  bottom: 8%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.codec .meter span {
+  height: 6%;
+  background: var(--g1);
+}
+
+.codec .meter span.on {
+  background: var(--g3);
+  box-shadow: 0 0 4px rgb(120 210 120 / 0.6);
+}
+
+/* Digits sit bottom right, inside the curve the bars leave open. */
+.codec .freq {
+  position: absolute;
+  right: 5%;
+  bottom: 9%;
+  height: 30%;
+}
+
+/* ── Dialogue ──────────────────────────────────────────────────────────── */
+
+.codec .subtitle {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 64%;
+  font-size: 2.2cqw;
+  line-height: 1.45;
+  text-align: center;
+  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.codec .subtitle small {
+  color: #8a8a8a;
+  font-size: 0.7em;
+}
+
+.codec .clink {
+  color: #fff;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Incoming call: the frequency blinks and CALL flashes until the link opens. */
+.codec .screen.ringing .freq,
+.codec .incoming {
+  animation: codec-blink 0.36s steps(1) infinite;
+}
+
+.codec .incoming {
+  letter-spacing: 0.4em;
+}
+
+@keyframes codec-blink {
+  50% { opacity: 0.15; }
+}
+
+/* ── Player controls, outside the game screen ─────────────────────────── */
+
+.codec .controls {
+  width: min(1100px, 100%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: "Courier New", ui-monospace, monospace;
+}
+
+.codec .controls input[type="range"] {
+  flex: 1;
+  accent-color: var(--g3);
+}
+
+.codec .call {
+  background: var(--g0);
+  color: var(--g4);
+  border: 2px solid var(--g2);
+  padding: 6px 14px;
+  font: inherit;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+}
+
+.codec .call:hover {
+  border-color: var(--g3);
+}
+
+.codec .call:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.codec .clock {
+  color: var(--g3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .codec .controls {
+    flex-wrap: wrap;
+  }
+}
+
+/* Before the call opens: the unit sits dim with empty frames, as in the game
+ * before the faces come up. */
+.codec .screen.standby .unit {
+  filter: brightness(0.55) saturate(0.6);
+}
+
+.codec .screen.standby .portrait {
+  border-color: var(--g1);
+  box-shadow: none;
+}
+
+.codec .prompt {
+  font-size: 0.6em;
+  letter-spacing: 0.25em;
+  color: #6f6f6f;
+}
+
+/* ── MEMORY: the contact list, one meeting per frequency ──────────────── */
+
+.codec button.arrow {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.codec button.arrow:disabled {
+  cursor: default;
+}
+
+.codec .screen.memory button.arrow:not(:disabled):hover,
+.codec .screen.memory button.arrow:not(:disabled):active {
+  color: var(--g4);
+  border-color: var(--g2);
+}
+
+.codec button.ctab {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.codec button.ctab:disabled {
+  cursor: default;
+}
+
+.codec .ctab.memory.lit {
+  color: #e8e8e8;
+  border-color: #6c6c6c;
+  background: linear-gradient(#2a2a2a, #111);
+}
+
+/* In MEMORY the unit itself is lit; only the frames stay empty. */
+.codec .screen.memory .unit {
+  filter: none;
+}
+
+.codec .contacts {
+  position: absolute;
+  left: 21%;
+  right: 21%;
+  top: 60%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5cqw;
+}
+
+.codec .contact {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 7.5cqw 1fr auto;
+  align-items: baseline;
+  gap: 1.6cqw;
+  padding: 0.45cqw 1.2cqw;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--g2);
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 1.6cqw;
+  text-align: left;
+  cursor: pointer;
+}
+
+.codec .contact.selected {
+  color: var(--g4);
+  border-color: var(--g2);
+  background: linear-gradient(90deg, rgb(52 140 70 / 0.35), rgb(52 140 70 / 0.08));
+  box-shadow: 0 0 1cqw rgb(120 210 120 / 0.25);
+}
+
+.codec .contact.selected .cfreq::before {
+  content: "▶ ";
+  position: absolute;
+  margin-left: -1.6cqw;
+}
+
+.codec .cfreq {
+  position: relative;
+  font-family: "Courier New", ui-monospace, monospace;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+}
+
+.codec .ctitle {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.codec .cmeta {
+  font-size: 0.8em;
+  color: var(--g2);
+  white-space: nowrap;
+}
+
+.codec .contact.selected .cmeta {
+  color: var(--g3);
+}
+
+.codec .contacts-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 92%;
+  text-align: center;
+  font-size: 1.05cqw;
+  letter-spacing: 0.25em;
+  color: #5d5d5d;
+}
+
+/* Under the unit, as in the game: PRESS SELECT TO EXIT. */
+.codec .exit {
+  position: absolute;
+  left: 50%;
+  top: 54%;
+  transform: translateX(-50%);
+  padding: 0.2cqw 0.8cqw;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 1.05cqw;
+  letter-spacing: 0.3em;
+  color: #5d5d5d;
+  cursor: pointer;
+}
+
+.codec .exit:hover {
+  color: #9a9a9a;
+}

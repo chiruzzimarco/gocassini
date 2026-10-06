@@ -1,5 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher, onDestroy, onMount } from "svelte";
+  import CodecPlayer from "./codec/CodecPlayer.svelte";
   import { cubicOut } from "svelte/easing";
   import { fade } from "svelte/transition";
   import type { PortableMeetingSummary } from "./viewer/loadArtifact";
@@ -535,7 +536,32 @@
   // MeetingView's
   // shortcuts <dialog> is open — a native modal already answers Escape, and
   // closing the meeting out from under it would be a second, unasked-for action.
+  // An easter egg: the Konami code opens the meeting list as a Metal Gear
+  // codec, the MEMORY screen calling meetings as contacts. It reads through
+  // this shell's own dataProvider, so it lists exactly what the browse list
+  // does, and keys typed into a field never count towards it.
+  const KONAMI = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
+  let konamiAt = 0;
+  let codecOpen = false;
+
+  function trackKonami(event: KeyboardEvent) {
+    const target = event.composedPath()[0] as HTMLElement | undefined;
+    if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) {
+      return;
+    }
+    const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+    konamiAt = key === KONAMI[konamiAt] ? konamiAt + 1 : key === KONAMI[0] ? 1 : 0;
+    if (konamiAt === KONAMI.length) {
+      konamiAt = 0;
+      codecOpen = true;
+    }
+  }
+
   function handleShellKeydown(event: KeyboardEvent) {
+    if (codecOpen) {
+      return;
+    }
+    trackKonami(event);
     if (event.key !== "Escape" || event.defaultPrevented) {
       return;
     }
@@ -1559,6 +1585,11 @@
     {/if}
   </div>
 {/if}
+{#if codecOpen}
+  <div class="codec-overlay">
+    <CodecPlayer provider={dataProvider} onexit={() => (codecOpen = false)} />
+  </div>
+{/if}
 </div><!-- /.cassini-root -->
 
 <style>
@@ -1691,5 +1722,13 @@
       border-radius: var(--radius-box, 1rem) var(--radius-box, 1rem) 0 0;
       box-shadow: 0 -8px 30px oklch(0% 0 0 / 0.22);
     }
+  }
+  /* The codec easter egg covers everything, the Nextcloud chrome included. */
+  .codec-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    overflow: auto;
+    background: #000;
   }
 </style>
