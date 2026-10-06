@@ -129,15 +129,33 @@
   flex: 1;
   display: grid;
   grid-template-rows: auto 1fr auto;
-  padding: calc(0.3 * var(--u)) 0;
 }
 
+/* A tab row: the tab sits between two lines, the unit's outline along its
+ * outer edge and a short rule along its inner one. */
 .codec .rail {
   position: relative;
-  height: calc(2.4 * var(--u));
+  height: calc(2.5 * var(--u));
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: stretch;
+}
+
+.codec .rail::after {
+  content: "";
+  position: absolute;
+  left: calc(2.2 * var(--u));
+  right: calc(2.2 * var(--u));
+  border-top: 1px solid #34433a;
+  pointer-events: none;
+}
+
+.codec .console > .rail:first-child::after {
+  bottom: calc(0.3 * var(--u));
+}
+
+.codec .console > .rail:last-child::after {
+  top: calc(0.3 * var(--u));
 }
 
 /* The outline of the unit, as on the codec: one thin grey frame that runs
@@ -149,8 +167,8 @@
   z-index: 0;
   left: calc(-1.4 * var(--u));
   right: calc(-1.4 * var(--u));
-  top: calc(1.5 * var(--u));
-  bottom: calc(1.5 * var(--u));
+  top: calc(0.15 * var(--u));
+  bottom: calc(0.15 * var(--u));
   border: 1px solid #3b4a40;
   pointer-events: none;
 }
@@ -161,50 +179,31 @@
   z-index: 1;
 }
 
-/* Two short rules across the middle only, just inside the tabs, stopping
- * short of the portraits on both sides. */
-.codec .tuner {
-  position: relative;
-}
 
-.codec .tuner::before,
-.codec .tuner::after {
-  content: "";
-  position: absolute;
-  left: calc(2.2 * var(--u));
-  right: calc(2.2 * var(--u));
-  border-top: 1px solid #2f3d33;
-  pointer-events: none;
-}
-
-.codec .tuner::before {
-  top: calc(0.1 * var(--u));
-}
-
-.codec .tuner::after {
-  bottom: calc(0.1 * var(--u));
-}
-
+/* Flat dark blocks, no border: PTT lit, MEMORY dim until it is open. */
 .codec .ctab {
   position: relative;
-  padding: calc(0.15 * var(--u)) calc(1.6 * var(--u));
-  font-weight: bold;
-  font-size: calc(1.6 * var(--u));
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 calc(2.6 * var(--u));
+  border: 0;
+  background: #26332e;
+  font-family: inherit;
+  font-weight: 900;
+  font-size: calc(1.5 * var(--u));
   letter-spacing: 0.35em;
   text-indent: 0.35em;
-  background: #000;
 }
 
-.codec .ctab.ptt {
-  color: #e8e8e8;
-  border: 1px solid #6c6c6c;
-  background: linear-gradient(#2a2a2a, #111);
+.codec .ctab.ptt,
+.codec .ctab.memory.lit {
+  color: #b9ffd6;
+  text-shadow: 0 0 calc(0.5 * var(--u)) rgb(120 255 180 / 0.55);
 }
 
 .codec .ctab.memory {
-  color: #4f6c58;
-  border: 1px solid #2c3d31;
-  background: linear-gradient(#1a221c, #0b0f0c);
+  color: #4d6659;
 }
 
 .codec .tuner {
@@ -222,14 +221,36 @@
   background: #0b0f0c;
 }
 
+/* The display: a dark panel with no side borders, a bar above and below it
+ * that reaches past its edges and thickens at the ends. */
 .codec .display {
   position: relative;
   width: calc(19 * var(--u));
   aspect-ratio: 3 / 2;
-  border: calc(0.25 * var(--u)) solid #5c5c5c;
-  background: var(--g0);
-  box-shadow: inset 0 0 calc(1.2 * var(--u)) rgb(0 0 0 / 0.8);
-  overflow: hidden;
+  background: #1c2925;
+  box-shadow: inset 0 0 calc(0.6 * var(--u)) rgb(0 0 0 / 0.6);
+}
+
+.codec .display::before,
+.codec .display::after {
+  content: "";
+  position: absolute;
+  left: calc(-1.4 * var(--u));
+  right: calc(-1.4 * var(--u));
+  height: calc(0.32 * var(--u));
+  background:
+    linear-gradient(#4c5c54, #4c5c54) left center / calc(0.9 * var(--u)) 100% no-repeat,
+    linear-gradient(#4c5c54, #4c5c54) right center / calc(0.9 * var(--u)) 100% no-repeat,
+    linear-gradient(#3e4c46, #3e4c46) center / 100% 55% no-repeat;
+  pointer-events: none;
+}
+
+.codec .display::before {
+  top: calc(-0.6 * var(--u));
+}
+
+.codec .display::after {
+  bottom: calc(-0.6 * var(--u));
 }
 
 /* Signal meter: bars stacked top to bottom, shortening along a curve, lit
@@ -398,9 +419,7 @@
 }
 
 .codec .ctab.memory.lit {
-  color: #e8e8e8;
-  border-color: #6c6c6c;
-  background: linear-gradient(#2a2a2a, #111);
+  background: #2c3a34;
 }
 
 /* In MEMORY the unit itself is lit; only the frames stay empty. */
