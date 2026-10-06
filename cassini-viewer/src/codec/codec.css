@@ -465,3 +465,8 @@
 .codec .exit:hover {
   color: #9a9a9a;
 }
+
+.codec .notice {
+  color: var(--g3);
+  letter-spacing: 0.2em;
+}

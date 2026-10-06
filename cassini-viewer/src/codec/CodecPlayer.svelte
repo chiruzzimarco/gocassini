@@ -8,16 +8,21 @@
   import { MUSIC_URL, connect, hangUp, loadSamples, ring, staticBurst, tuneBlip } from "./sfx";
   import SevenSeg from "./SevenSeg.svelte";
   import Static from "./Static.svelte";
+  import { UploadUnavailableError, describeDropped, uploadMeeting } from "./upload";
   import "./codec.css";
 
   // The meeting list comes from the same provider the viewer browses with:
   // catalog.json standalone, the operator's list when embedded.
   // onexit, when given, is how the host closes the codec (the viewer's easter
   // egg); standalone there is nothing to exit to.
+  // uploads: a dropped .opus is sent to the site's upload service and joins
+  // the shared MEMORY list (the standalone site, deploy/codec). Without it, or
+  // where no service answers, a drop just plays the file here.
   let {
     provider = new StaticCatalogProvider(),
     onexit,
-  }: { provider?: DataProvider; onexit?: () => void } = $props();
+    uploads = false,
+  }: { provider?: DataProvider; onexit?: () => void; uploads?: boolean } = $props();
 
   // A finished line stays on screen this long after its last word.
   const HOLD_MS = 1500;
@@ -33,6 +38,14 @@
   let cursor = $state(0);
   // What the frequency is derived from: the meeting id, or the file for a drop.
   let freqKey = $state("");
+  // A one-line status under the list: upload progress, success, failure.
+  let notice = $state("");
+  let noticeTimer: ReturnType<typeof setTimeout> | undefined;
+  function say(text: string, clearAfterMs = 0) {
+    clearTimeout(noticeTimer);
+    notice = text;
+    if (clearAfterMs) noticeTimer = setTimeout(() => (notice = ""), clearAfterMs);
+  }
   let error = $state("");
   let artifact = $state<LoadedArtifact | null>(null);
   let audioUrl = $state("");
@@ -308,8 +321,50 @@
   async function onFiles(list: FileList | null | undefined) {
     const files = [...(list ?? [])];
     const opus = files.find((f) => /\.(opus|ogg)$/i.test(f.name));
-    if (opus) await open(URL.createObjectURL(opus), opus.name.replace(/\.[^.]+$/, ""));
+    if (opus && !(uploads && (await addToMemory(opus)))) {
+      await open(URL.createObjectURL(opus), opus.name.replace(/\.[^.]+$/, ""));
+    }
     await addPortraitFiles(files.filter((f) => f !== opus));
+  }
+
+  // Upload a dropped meeting and put the cursor on it. False means there is no
+  // upload service here, and the caller plays the file locally instead.
+  async function addToMemory(file: File): Promise<boolean> {
+    let meta;
+    try {
+      meta = await describeDropped(file);
+    } catch (e) {
+      console.warn(`codec: ${file.name} is not a Cassini meeting`, e);
+      say(`NOT A CASSINI MEETING: ${file.name}`, 6000);
+      return true;
+    }
+    const name = meta.title.toUpperCase();
+    try {
+      say(`UPLOADING ${name}… 0%`);
+      await uploadMeeting(file, meta, (f) => say(`UPLOADING ${name}… ${Math.round(f * 100)}%`));
+    } catch (e) {
+      if (e instanceof UploadUnavailableError) {
+        console.info("codec: no upload service, playing the dropped file here", e);
+        say("");
+        return false;
+      }
+      console.error(`codec: upload of ${file.name} failed`, e);
+      say(`UPLOAD FAILED: ${e instanceof Error ? e.message : String(e)}`, 8000);
+      return true;
+    }
+    try {
+      entries = (await provider.loadCatalog())?.meetings ?? entries;
+    } catch (e) {
+      console.error("codec: could not reload the meeting list", e);
+    }
+    const at = entries.findIndex((e) => e.id === meta.id);
+    if (at >= 0) cursor = at;
+    // Don't pull someone out of a call they are listening to.
+    if (!(view === "call" && call !== "off")) view = "memory";
+    say(`ADDED TO MEMORY: ${name}`, 5000);
+    const ctx = ensureCtx();
+    if (ctx) tuneBlip(ctx);
+    return true;
   }
 
   async function onPhotoPicked(list: FileList | null) {
@@ -519,13 +574,21 @@
           {/if}
         {/each}
       </ol>
-      <div class="contacts-hint">{cursor + 1} / {entries.length} &nbsp;·&nbsp; ↑↓ TUNE &nbsp;·&nbsp; ENTER CALL</div>
+      <div class="contacts-hint">
+        {#if notice}
+          <span class="notice">{notice}</span>
+        {:else}
+          {cursor + 1} / {entries.length} &nbsp;·&nbsp; ↑↓ TUNE &nbsp;·&nbsp; ENTER CALL{#if uploads}&nbsp;·&nbsp; DROP A .OPUS TO ADD IT{/if}
+        {/if}
+      </div>
       {#if onexit}
         <button class="exit" onclick={exit}>PRESS ESC TO EXIT</button>
       {/if}
     {:else}
     <div class="subtitle" aria-live="polite">
-      {#if phase === "idle"}
+      {#if notice && phase === "idle"}
+        <span class="notice">{notice}</span>
+      {:else if phase === "idle"}
         Drop a Cassini .opus here, or <label class="clink">choose one<input type="file" accept=".opus,.ogg,image/*" multiple hidden onchange={(e) => onFiles(e.currentTarget.files)} /></label>.
         <br /><small>Add speaker photos too: name them after the speaker, e.g. <code>bob.jpg</code>.</small>
       {:else if call === "ringing"}
