@@ -73,10 +73,11 @@
   width: 100%;
   aspect-ratio: 13 / 20;
   padding: 0;
-  border: calc(0.35 * var(--u)) solid var(--g3);
+  /* A mid green with a soft glow; the picture, not the frame, is the bright part. */
+  border: calc(0.3 * var(--u)) solid #3f9a5d;
   border-radius: calc(0.5 * var(--u));
   box-shadow:
-    0 0 calc(1.4 * var(--u)) rgb(120 210 120 / 0.55),
+    0 0 calc(0.7 * var(--u)) rgb(90 190 120 / 0.35),
     inset 0 0 0 calc(0.2 * var(--u)) #000;
   background: var(--g0);
   overflow: hidden;
@@ -187,15 +188,43 @@
   z-index: 1;
   display: flex;
   align-items: center;
-  padding: 0 calc(2.6 * var(--u));
+  justify-content: center;
+  /* Both tabs are the same width, as on the codec. */
+  width: calc(14.5 * var(--u));
+  padding: 0;
   border: 0;
   background: #26332e;
   font-family: inherit;
-  /* The dot font made bold: chunky pixel letters, tightly set, as on the tabs. */
+  /* The dot font made bold for the chunky pixel letters. */
   font-weight: 900;
-  font-size: calc(1.8 * var(--u));
-  letter-spacing: 0.14em;
-  text-indent: 0.14em;
+}
+
+/* The codec's tab lettering is wide, wider than tall: stretch the word
+ * across rather than spread narrow letters apart. */
+.codec .ctab-word {
+  display: inline-block;
+}
+
+/* PTT: big letters spread across the middle of the tab. */
+.codec .ctab.ptt {
+  font-size: calc(2.4 * var(--u));
+}
+
+.codec .ctab.ptt .ctab-word {
+  letter-spacing: 0.5em;
+  margin-right: -0.5em; /* no trailing gap after the last letter */
+  transform: scaleX(1.2);
+}
+
+/* MEMORY: set tight, filling nearly the whole tab. */
+.codec .ctab.memory {
+  font-size: calc(2.1 * var(--u));
+}
+
+.codec .ctab.memory .ctab-word {
+  letter-spacing: 0.08em;
+  margin-right: -0.08em;
+  transform: scaleX(1.6);
 }
 
 .codec .ctab.ptt,

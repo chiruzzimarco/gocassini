@@ -613,7 +613,7 @@
       {/each}
 
       <div class="console" style="order:1">
-        <div class="rail"><span class="ctab ptt">PTT</span></div>
+        <div class="rail"><span class="ctab ptt"><span class="ctab-word">PTT</span></span></div>
         <div class="tuner">
           <button class="arrow" class:lit={arrowLit === -1} aria-label="Previous frequency" disabled={view !== "memory"} onclick={() => moveCursor(-1)}>◀</button>
           <div class="display">
@@ -635,7 +635,7 @@
             class:lit={view === "memory"}
             disabled={!entries.length}
             onclick={() => (view === "memory" ? backToCall() : openMemory())}
-          >MEMORY</button>
+          ><span class="ctab-word">MEMORY</span></button>
         </div>
       </div>
     </div>
