@@ -496,8 +496,17 @@
     if (audio) audio.currentTime = Math.max(0, Math.min(durationMs, ms)) / 1000;
   }
 
+  // Only fields you type into keep the keys to themselves; the seek bar and
+  // the player buttons never take the codec's controls away.
+  function typingIn(target: EventTarget | null): boolean {
+    const el = target as HTMLElement | null;
+    if (!el) return false;
+    if (el.isContentEditable || el.tagName === "TEXTAREA" || el.tagName === "SELECT") return true;
+    return el.tagName === "INPUT" && !["range", "button", "checkbox", "radio", "file"].includes((el as HTMLInputElement).type);
+  }
+
   function onKey(e: KeyboardEvent) {
-    if ((e.target as HTMLElement)?.tagName === "INPUT") return;
+    if (typingIn(e.target)) return;
     if (view === "memory") {
       if (e.code === "Escape") {
         // Back to a call still on the line; otherwise out of the codec.
@@ -525,11 +534,19 @@
       return;
     }
     if (phase !== "ready") return;
+    // preventDefault so a focused seek bar or button does not also act on it.
     if (e.code === "Space") {
       e.preventDefault();
       toggle();
-    } else if (e.code === "ArrowLeft") seek(timeMs - 5000);
-    else if (e.code === "ArrowRight") seek(timeMs + 5000);
+    } else if (e.code === "ArrowLeft") {
+      e.preventDefault();
+      seek(timeMs - 5000);
+    } else if (e.code === "ArrowRight") {
+      e.preventDefault();
+      seek(timeMs + 5000);
+    } else if (e.code === "ArrowUp") {
+      e.preventDefault();
+    }
   }
 
   const buf = new Uint8Array(512);
@@ -746,7 +763,14 @@
 
   <!-- The player stays while MEMORY is open over a call still on the line.
        Its space is always kept, so the screen never shifts when it appears. -->
-  <div class="controls" class:vacant={!playerShown} inert={!playerShown}>
+  <!-- After a click or a drag the bar lets go of focus, so a button cannot be
+       pressed again by Space or Enter and the arrows stay the codec's. -->
+  <div
+    class="controls"
+    class:vacant={!playerShown}
+    inert={!playerShown}
+    onpointerup={() => (document.activeElement as HTMLElement | null)?.blur()}
+  >
       <button class="call" onclick={toggle} disabled={call === "ringing"}>
         {call === "ringing" ? "RINGING" : playing ? "■ HOLD" : call === "off" ? "▶ CALL" : "▶ RESUME"}
       </button>
