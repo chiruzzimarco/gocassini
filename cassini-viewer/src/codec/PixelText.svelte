@@ -23,7 +23,8 @@
   // A lighter cut (one-pixel uprights), for a label that should read less
   // heavy: PTT. Letters without one fall back to the bold.
   const MEDIUM: Record<string, string[]> = {
-    P: ["####.", "#...#", "#...#", "####.", "#....", "#....", "#...."],
+    // Horizontal strokes two pixels tall, like the T's bar, so the P matches.
+    P: ["####.", "#####", "#...#", "#####", "####.", "#....", "#...."],
     T: ["#####", "#####", "..#..", "..#..", "..#..", "..#..", "..#.."],
   };
   const ROWS = 7;
