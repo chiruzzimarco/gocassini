@@ -563,24 +563,26 @@
     {#if view === "memory"}
       <ol class="contacts" aria-label="Meetings">
         {#each entries as entry, i (entry.id)}
-          {#if Math.abs(i - Math.min(Math.max(cursor, 2), entries.length - 3)) <= 2}
-            <li>
-              <button class="contact" class:selected={i === cursor} onclick={() => (i === cursor ? dial(entry) : (cursor = i))}>
+          <!-- A desktop shows five rows around the cursor, as the game does; a
+               phone scrolls the whole list. Tapping or clicking a row calls it. -->
+          <li class:far={Math.abs(i - Math.min(Math.max(cursor, 2), entries.length - 3)) > 2}>
+              <button class="contact" class:selected={i === cursor} onclick={() => { cursor = i; void dial(entry); }}>
                 <span class="cfreq">{freqOf(entry.id)}</span>
                 <span class="ctitle">{entry.title}</span>
                 <span class="cmeta">
                   {formatMeetingDateShort(entry.dateLabel)}{entry.digestDurationMs ? ` · ${formatMeetingDuration(entry.digestDurationMs)}` : ""}
                 </span>
               </button>
-            </li>
-          {/if}
+          </li>
         {/each}
       </ol>
       <div class="contacts-hint">
         {#if notice}
           <span class="notice">{notice}</span>
         {:else}
-          {cursor + 1} / {entries.length} &nbsp;·&nbsp; ↑↓ TUNE &nbsp;·&nbsp; ENTER CALL{#if uploads}&nbsp;·&nbsp; DROP A .OPUS TO ADD IT{/if}
+          {cursor + 1} / {entries.length}
+          <span class="keys">&nbsp;·&nbsp; ↑↓ TUNE &nbsp;·&nbsp; ENTER CALL{#if uploads}&nbsp;·&nbsp; DROP A .OPUS TO ADD IT{/if}</span>
+          <span class="touch">&nbsp;·&nbsp; TAP A MEETING TO CALL</span>
         {/if}
       </div>
       {#if onexit}

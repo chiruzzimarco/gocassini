@@ -1,4 +1,7 @@
 .codec {
+  /* Every size on the codec screen is a multiple of --u: 1% of the screen's
+   * width on a desktop, larger on a phone so the unit fills the width. */
+  --u: 1cqw;
   --bg: #000;
   --g0: #04140a;
   --g1: #124624;
@@ -50,7 +53,7 @@
   position: absolute;
   left: 50%;
   top: 15%;
-  width: 63cqw;
+  width: calc(63 * var(--u));
   transform: translateX(-50%);
   display: flex;
   align-items: stretch;
@@ -60,7 +63,7 @@
 
 .codec .seat {
   position: relative;
-  flex: 0 0 14cqw;
+  flex: 0 0 calc(14 * var(--u));
 }
 
 .codec .portrait {
@@ -69,11 +72,11 @@
   width: 100%;
   aspect-ratio: 13 / 20;
   padding: 0;
-  border: 0.35cqw solid var(--g3);
-  border-radius: 0.5cqw;
+  border: calc(0.35 * var(--u)) solid var(--g3);
+  border-radius: calc(0.5 * var(--u));
   box-shadow:
-    0 0 1.4cqw rgb(120 210 120 / 0.55),
-    inset 0 0 0 0.2cqw #000;
+    0 0 calc(1.4 * var(--u)) rgb(120 210 120 / 0.55),
+    inset 0 0 0 calc(0.2 * var(--u)) #000;
   background: var(--g0);
   overflow: hidden;
   cursor: pointer;
@@ -107,8 +110,8 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: calc(100% + 0.8cqw);
-  font-size: 1.1cqw;
+  top: calc(100% + calc(0.8 * var(--u)));
+  font-size: calc(1.1 * var(--u));
   letter-spacing: 0.15em;
   text-transform: uppercase;
   text-align: center;
@@ -124,12 +127,12 @@
   flex: 1;
   display: grid;
   grid-template-rows: auto 1fr auto;
-  padding: 0.3cqw 0;
+  padding: calc(0.3 * var(--u)) 0;
 }
 
 .codec .rail {
   position: relative;
-  height: 2.4cqw;
+  height: calc(2.4 * var(--u));
   display: flex;
   justify-content: center;
   align-items: center;
@@ -142,7 +145,7 @@
   left: 0;
   right: 0;
   top: 50%;
-  height: 0.55cqw;
+  height: calc(0.55 * var(--u));
   transform: translateY(-50%);
   border-top: 1px solid var(--rail);
   border-bottom: 1px solid var(--rail);
@@ -150,9 +153,9 @@
 
 .codec .ctab {
   position: relative;
-  padding: 0.15cqw 1.6cqw;
+  padding: calc(0.15 * var(--u)) calc(1.6 * var(--u));
   font-weight: bold;
-  font-size: 1.6cqw;
+  font-size: calc(1.6 * var(--u));
   letter-spacing: 0.35em;
   text-indent: 0.35em;
   background: #000;
@@ -174,24 +177,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1.6cqw;
+  gap: calc(1.6 * var(--u));
 }
 
 .codec .arrow {
-  font-size: 1.5cqw;
+  font-size: calc(1.5 * var(--u));
   color: #4f6c58;
   border: 1px solid #2c3d31;
-  padding: 0.3cqw 0.7cqw;
+  padding: calc(0.3 * var(--u)) calc(0.7 * var(--u));
   background: #0b0f0c;
 }
 
 .codec .display {
   position: relative;
-  width: 19cqw;
+  width: calc(19 * var(--u));
   aspect-ratio: 3 / 2;
-  border: 0.25cqw solid #5c5c5c;
+  border: calc(0.25 * var(--u)) solid #5c5c5c;
   background: var(--g0);
-  box-shadow: inset 0 0 1.2cqw rgb(0 0 0 / 0.8);
+  box-shadow: inset 0 0 calc(1.2 * var(--u)) rgb(0 0 0 / 0.8);
   overflow: hidden;
 }
 
@@ -233,7 +236,7 @@
   left: 12%;
   right: 12%;
   top: 64%;
-  font-size: 2.2cqw;
+  font-size: calc(2.2 * var(--u));
   line-height: 1.45;
   text-align: center;
   color: var(--text);
@@ -378,21 +381,21 @@
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.5cqw;
+  gap: calc(0.5 * var(--u));
 }
 
 .codec .contact {
   width: 100%;
   display: grid;
-  grid-template-columns: 7.5cqw 1fr auto;
+  grid-template-columns: calc(7.5 * var(--u)) 1fr auto;
   align-items: baseline;
-  gap: 1.6cqw;
-  padding: 0.45cqw 1.2cqw;
+  gap: calc(1.6 * var(--u));
+  padding: calc(0.45 * var(--u)) calc(1.2 * var(--u));
   border: 1px solid transparent;
   background: transparent;
   color: var(--g2);
   font-family: Helvetica, Arial, sans-serif;
-  font-size: 1.6cqw;
+  font-size: calc(1.6 * var(--u));
   text-align: left;
   cursor: pointer;
 }
@@ -401,13 +404,13 @@
   color: var(--g4);
   border-color: var(--g2);
   background: linear-gradient(90deg, rgb(52 140 70 / 0.35), rgb(52 140 70 / 0.08));
-  box-shadow: 0 0 1cqw rgb(120 210 120 / 0.25);
+  box-shadow: 0 0 var(--u) rgb(120 210 120 / 0.25);
 }
 
 .codec .contact.selected .cfreq::before {
   content: "▶ ";
   position: absolute;
-  margin-left: -1.6cqw;
+  margin-left: -calc(1.6 * var(--u));
 }
 
 .codec .cfreq {
@@ -441,7 +444,7 @@
   right: 0;
   top: 92%;
   text-align: center;
-  font-size: 1.05cqw;
+  font-size: calc(1.05 * var(--u));
   letter-spacing: 0.25em;
   color: #5d5d5d;
 }
@@ -452,11 +455,11 @@
   left: 50%;
   top: 54%;
   transform: translateX(-50%);
-  padding: 0.2cqw 0.8cqw;
+  padding: calc(0.2 * var(--u)) calc(0.8 * var(--u));
   border: 0;
   background: none;
   font-family: inherit;
-  font-size: 1.05cqw;
+  font-size: calc(1.05 * var(--u));
   letter-spacing: 0.3em;
   color: #5d5d5d;
   cursor: pointer;
@@ -469,4 +472,114 @@
 .codec .notice {
   color: var(--g3);
   letter-spacing: 0.2em;
+}
+
+.codec .contacts li.far {
+  display: none;
+}
+
+.codec .contacts-hint .touch {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .codec .contacts-hint .keys {
+    display: none;
+  }
+  .codec .contacts-hint .touch {
+    display: inline;
+  }
+}
+
+/* ── Phones: the unit fills the width; list and dialogue flow beneath it ── */
+
+@media (max-width: 700px) {
+  .codec {
+    justify-content: flex-start;
+    padding: 12px 8px;
+  }
+
+  .codec .screen {
+    --u: 1.5cqw;
+    aspect-ratio: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 0 12px;
+    overflow: visible;
+  }
+
+  .codec .unit {
+    position: static;
+    transform: none;
+    width: 96%;
+  }
+
+  .codec .seat .name {
+    font-size: 11px;
+  }
+
+  .codec .contacts {
+    position: static;
+    width: 100%;
+    margin-top: 14px;
+    gap: 6px;
+  }
+
+  .codec .contacts li.far {
+    display: block;
+  }
+
+  .codec .contact {
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "freq title"
+      "freq meta";
+    gap: 2px 14px;
+    padding: 10px 12px;
+    font-size: 16px;
+  }
+
+  .codec .contact .cfreq {
+    grid-area: freq;
+    align-self: center;
+  }
+
+  .codec .contact .ctitle {
+    grid-area: title;
+  }
+
+  .codec .contact .cmeta {
+    grid-area: meta;
+    font-size: 12px;
+  }
+
+  .codec .contact.selected .cfreq::before {
+    content: none;
+  }
+
+  .codec .contacts-hint,
+  .codec .exit {
+    position: static;
+    transform: none;
+    font-size: 11px;
+  }
+
+  .codec .subtitle {
+    position: static;
+    width: 100%;
+    padding: 0 6px;
+    font-size: 17px;
+    -webkit-line-clamp: 6;
+  }
+
+  .codec .controls {
+    gap: 8px;
+  }
+
+  .codec .controls input[type="range"] {
+    order: 3;
+    flex: 1 0 100%;
+  }
 }
