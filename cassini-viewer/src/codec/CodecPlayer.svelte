@@ -9,6 +9,7 @@
   import { MUSIC_URL, connect, hangUp, loadSamples, ring, staticBurst, tuneBlip } from "./sfx";
   import SevenSeg from "./SevenSeg.svelte";
   import Static from "./Static.svelte";
+  import PixelText from "./PixelText.svelte";
   import Interference from "./Interference.svelte";
   import { UploadUnavailableError, describeDropped, uploadMeeting } from "./upload";
   import "./codec.css";
@@ -613,7 +614,7 @@
       {/each}
 
       <div class="console" style="order:1">
-        <div class="rail"><span class="ctab ptt"><span class="ctab-word">PTT</span></span></div>
+        <div class="rail"><span class="ctab ptt"><span class="ctab-word"><PixelText text="PTT" gap={2} stretch={1.85} /></span></span></div>
         <div class="tuner">
           <button class="arrow" class:lit={arrowLit === -1} aria-label="Previous frequency" disabled={view !== "memory"} onclick={() => moveCursor(-1)}>◀</button>
           <div class="display">
@@ -635,7 +636,7 @@
             class:lit={view === "memory"}
             disabled={!entries.length}
             onclick={() => (view === "memory" ? backToCall() : openMemory())}
-          ><span class="ctab-word">MEMORY</span></button>
+          ><span class="ctab-word"><PixelText text="MEMORY" gap={1} stretch={1.6} /></span></button>
         </div>
       </div>
     </div>

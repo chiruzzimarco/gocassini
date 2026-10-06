@@ -199,32 +199,22 @@
   font-weight: 900;
 }
 
-/* The codec's tab lettering is wide, wider than tall: stretch the word
- * across rather than spread narrow letters apart. */
+/* The tab lettering is drawn pixel art (PixelText): sized to the tab's
+ * height with a margin above and below, so it never touches the edges. */
 .codec .ctab-word {
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  height: 55%;
 }
 
-/* PTT: big letters spread across the middle of the tab. */
-.codec .ctab.ptt {
-  font-size: calc(2.4 * var(--u));
+.codec .ctab.ptt .ctab-word,
+.codec .ctab.memory.lit .ctab-word {
+  filter: drop-shadow(0 0 calc(0.35 * var(--u)) rgb(137 238 200 / 0.55));
 }
 
-.codec .ctab.ptt .ctab-word {
-  letter-spacing: 0.5em;
-  margin-right: -0.5em; /* no trailing gap after the last letter */
-  transform: scaleX(1.2);
-}
-
-/* MEMORY: set tight, filling nearly the whole tab. */
-.codec .ctab.memory {
-  font-size: calc(2.1 * var(--u));
-}
-
+/* MEMORY is set tight and wide: let it run nearly across the tab. */
 .codec .ctab.memory .ctab-word {
-  letter-spacing: 0.08em;
-  margin-right: -0.08em;
-  transform: scaleX(1.6);
+  height: 50%;
 }
 
 .codec .ctab.ptt,
