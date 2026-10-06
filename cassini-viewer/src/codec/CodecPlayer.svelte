@@ -79,10 +79,36 @@
     if (music) music.volume = playing ? MUSIC_UNDER_VOICES : MUSIC_IDLE;
   });
 
+  // The visitor can switch the music off (the ♪ button or M); the choice is a
+  // per-browser convenience, so it lives in localStorage and the page works
+  // the same without it.
+  const MUSIC_PREF = "codec-music";
+  let musicAvailable = $state(false);
+  let musicOn = $state(readMusicPref());
+
+  function readMusicPref(): boolean {
+    try {
+      return localStorage.getItem(MUSIC_PREF) !== "off";
+    } catch {
+      return true; // storage blocked (private window, previews): default on
+    }
+  }
+
+  function toggleMusic() {
+    musicOn = !musicOn;
+    try {
+      localStorage.setItem(MUSIC_PREF, musicOn ? "on" : "off");
+    } catch (e) {
+      console.info("codec: could not remember the music setting", e);
+    }
+    if (musicOn) startMusic();
+    else music?.pause();
+  }
+
   // Browsers refuse sound before the visitor interacts with the page, so if
   // the first attempt is blocked, start on the first click, key or drop.
   function startMusic() {
-    if (!music || !music.paused) return;
+    if (!music || !music.paused || !musicOn) return;
     music.play().catch((e) => {
       if (e?.name !== "NotAllowedError") {
         console.info(`codec: background track did not start`, e);
@@ -507,6 +533,10 @@
 
   function onKey(e: KeyboardEvent) {
     if (typingIn(e.target)) return;
+    if (e.code === "KeyM" && musicAvailable && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      toggleMusic();
+      return;
+    }
     if (view === "memory") {
       if (e.code === "Escape") {
         // Back to a call still on the line; otherwise out of the codec.
@@ -630,6 +660,16 @@
     void onFiles(e.dataTransfer?.files);
   }}
 >
+  {#if musicAvailable}
+    <button
+      class="music-toggle"
+      class:off={!musicOn}
+      aria-pressed={musicOn}
+      title="Background music (M)"
+      onclick={toggleMusic}
+      onpointerup={(e) => e.currentTarget.blur()}
+    >♪ MUSIC {musicOn ? "ON" : "OFF"}</button>
+  {/if}
   <div
     class="screen"
     class:ringing={call === "ringing"}
@@ -809,7 +849,10 @@
     src={MUSIC_URL}
     loop
     preload="auto"
-    oncanplay={startMusic}
+    oncanplay={() => {
+      musicAvailable = true;
+      startMusic();
+    }}
     onerror={() => console.info(`codec: no background track at ${MUSIC_URL}`)}
   ></audio>
   <input bind:this={photoInput} type="file" accept="image/*" hidden onchange={(e) => onPhotoPicked(e.currentTarget.files)} />
