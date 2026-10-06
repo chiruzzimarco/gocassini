@@ -183,6 +183,8 @@
   );
   const mouthOpen = $derived(talking && Math.floor(timeMs / FLAP_MS) % 2 === 0);
   const speaking = $derived(activeBlock?.speaker ?? null);
+  // The player bar shows in a call, and in MEMORY over a call still on.
+  const playerShown = $derived(phase === "ready" && (view === "call" || call === "open"));
 
   // Keep the current speaker on screen; they take the side whose occupant spoke
   // least recently, the way a codec call cuts between people.
@@ -688,9 +690,9 @@
     {/if}
   </div>
 
-  <!-- The player stays while MEMORY is open over a call still on the line. -->
-  {#if phase === "ready" && (view === "call" || call === "open")}
-    <div class="controls">
+  <!-- The player stays while MEMORY is open over a call still on the line.
+       Its space is always kept, so the screen never shifts when it appears. -->
+  <div class="controls" class:vacant={!playerShown} inert={!playerShown}>
       <button class="call" onclick={toggle} disabled={call === "ringing"}>
         {call === "ringing" ? "RINGING" : playing ? "■ HOLD" : call === "off" ? "▶ CALL" : "▶ RESUME"}
       </button>
@@ -707,8 +709,7 @@
       {#if entries.length}
         <button class="call" onclick={hangup} title="Back to MEMORY (↓ or Esc)">✕ HANG UP</button>
       {/if}
-    </div>
-  {/if}
+  </div>
   <audio
     bind:this={audio}
     src={audioUrl || undefined}
