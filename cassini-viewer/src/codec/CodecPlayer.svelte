@@ -676,7 +676,7 @@
       {/each}
 
       <div class="console" style="order:1">
-        <div class="rail"><span class="ctab ptt"><span class="ctab-word"><PixelText text="PTT" gap={2} stretch={1.85} /></span></span></div>
+        <div class="rail"><span class="ctab ptt"><span class="ctab-word"><PixelText text="PTT" gap={2} stretch={2.13} weight="medium" /></span></span></div>
         <div class="tuner">
           <button class="arrow" class:lit={arrowLit === -1} aria-label="Previous frequency" disabled={view !== "memory"} onclick={() => moveCursor(-1)}>◀</button>
           <div class="display">

@@ -3,7 +3,13 @@
   // drawn as a bitmap rather than set in a font, so every letter has the same
   // height and weight. Only the letters the tabs use are defined.
   // `stretch` widens the letters: the codec's are wider than they are tall.
-  let { text, gap = 1, stretch = 1 }: { text: string; gap?: number; stretch?: number } = $props();
+  // `weight` picks the stroke: bold (two pixels) or medium (one-pixel uprights).
+  let {
+    text,
+    gap = 1,
+    stretch = 1,
+    weight = "bold",
+  }: { text: string; gap?: number; stretch?: number; weight?: "bold" | "medium" } = $props();
 
   const GLYPHS: Record<string, string[]> = {
     P: ["#####.", "##..##", "##..##", "#####.", "##....", "##....", "##...."],
@@ -14,13 +20,19 @@
     R: ["#####.", "##..##", "##..##", "#####.", "##.##.", "##..##", "##..##"],
     Y: ["##..##", "##..##", ".####.", "..##..", "..##..", "..##..", "..##.."],
   };
+  // A lighter cut (one-pixel uprights), for a label that should read less
+  // heavy: PTT. Letters without one fall back to the bold.
+  const MEDIUM: Record<string, string[]> = {
+    P: ["####.", "#...#", "#...#", "####.", "#....", "#....", "#...."],
+    T: ["#####", "#####", "..#..", "..#..", "..#..", "..#..", "..#.."],
+  };
   const ROWS = 7;
 
   const layout = $derived.by(() => {
     const cells: { x: number; y: number }[] = [];
     let x = 0;
     for (const ch of text.toUpperCase()) {
-      const glyph = GLYPHS[ch];
+      const glyph = (weight === "medium" ? MEDIUM[ch] : undefined) ?? GLYPHS[ch];
       if (!glyph) {
         x += 3 + gap; // an unknown character leaves a space
         continue;
