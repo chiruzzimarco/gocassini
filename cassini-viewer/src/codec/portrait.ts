@@ -1,17 +1,27 @@
-// Codec-style portraits: a closed-mouth and an open-mouth frame per speaker,
-// styled from a photo (a webcam frame, an avatar). A speaker with no picture
-// gets white noise instead (Static.svelte).
+// Codec-style portraits: a closed-mouth and an open-mouth frame per speaker.
+// Either styled from a photo (a webcam frame, an avatar) or generated from the
+// speaker id when nobody supplied one.
 
 export interface Portrait {
   quiet: string;
   talk: string;
+  // A full illustration rather than a pixel sprite: scale it smoothly.
+  smooth?: boolean;
 }
 
 export const SPRITE_W = 96;
 export const SPRITE_H = 120;
 
-// Flat painted tones, near-black shadows, pale highlights. No dithering: MGS
-// portraits are cel-shaded, not halftoned.
+const PALETTE: [number, number, number][] = [
+  [4, 20, 10],
+  [18, 70, 36],
+  [52, 140, 70],
+  [120, 210, 120],
+  [200, 255, 190],
+];
+
+// Photos get a longer ramp: flat painted tones, near-black shadows, pale
+// highlights. No dithering; MGS portraits are cel-shaded, not halftoned.
 const PHOTO_PALETTE: [number, number, number][] = [
   [2, 10, 5],
   [12, 42, 22],
@@ -28,7 +38,7 @@ const PHOTO_MOUTH_Y = 0.7;
 
 type Levels = Uint8Array; // palette index per pixel, row-major SPRITE_W × SPRITE_H
 
-function toDataUrl(levels: Levels, palette: [number, number, number][]): string {
+function toDataUrl(levels: Levels, palette = PALETTE): string {
   const canvas = document.createElement("canvas");
   canvas.width = SPRITE_W;
   canvas.height = SPRITE_H;
@@ -54,6 +64,20 @@ function openMouth(levels: Levels, mouthY: number, mouthWidth: number): Levels {
   const x1 = Math.round(SPRITE_W * (0.5 + mouthWidth / 2));
   for (let y = y0; y < y0 + drop; y++) {
     for (let x = x0; x < x1; x++) out[y * SPRITE_W + x] = 0;
+  }
+  return out;
+}
+
+/** Inks the boundary between tones at least two steps apart, on the darker side. */
+function ink(levels: Uint8Array, w: number, h: number): Uint8Array {
+  const out = levels.slice();
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = y * w + x;
+      for (const j of [x + 1 < w ? i + 1 : -1, y + 1 < h ? i + w : -1]) {
+        if (j >= 0 && Math.abs(levels[i] - levels[j]) >= 2) out[levels[i] < levels[j] ? i : j] = 0;
+      }
+    }
   }
   return out;
 }
@@ -210,5 +234,132 @@ export async function portraitFromImage(source: Blob | string): Promise<Portrait
   return {
     quiet: toDataUrl(levels, PHOTO_PALETTE),
     talk: toDataUrl(openMouth(levels, PHOTO_MOUTH_Y, 0.14), PHOTO_PALETTE),
+  };
+}
+
+// ── Generated from the speaker id ───────────────────────────────────────────
+
+function rng(seed: string): () => number {
+  let h = 2166136261;
+  for (const ch of seed) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+  return () => {
+    h = (h + 0x6d2b79f5) | 0;
+    let t = Math.imul(h ^ (h >>> 15), 1 | h);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+export function generatedPortrait(seed: string): Portrait {
+  const r = rng(seed);
+  const pick = <T,>(xs: T[]): T => xs[Math.floor(r() * xs.length)];
+  const S = 2; // draw on a 48×60 grid, scale ×2 to the sprite
+  const W = SPRITE_W / S;
+  const H = SPRITE_H / S;
+  const grid = new Uint8Array(W * H);
+  const set = (x: number, y: number, v: number) => {
+    if (x >= 0 && x < W && y >= 0 && y < H) grid[Math.floor(y) * W + Math.floor(x)] = v;
+  };
+  const ellipse = (cx: number, cy: number, rx: number, ry: number, v: number | ((x: number, y: number) => number)) => {
+    for (let y = Math.floor(cy - ry); y <= cy + ry; y++) {
+      for (let x = Math.floor(cx - rx); x <= cx + rx; x++) {
+        if (((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1) set(x, y, typeof v === "number" ? v : v(x, y));
+      }
+    }
+  };
+  const rect = (x0: number, y0: number, w: number, h: number, v: number) => {
+    for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) set(x, y, v);
+  };
+  const dither = (x: number, y: number, a: number, b: number) => ((x + y) % 2 === 0 ? a : b);
+
+  // Backdrop: mid-dark with a soft light from the upper left, so dark hair and
+  // clothes still read as a silhouette against it.
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) set(x, y, x + y < 34 ? dither(x, y, 2, 1) : 1);
+
+  const cx = W / 2;
+  const faceY = 25;
+  const rx = 13 + r() * 2;
+  const ry = 16 + r() * 2;
+  const lit = (x: number) => (x > cx + rx * 0.35 ? 2 : 3);
+
+  // Shoulders, collar, neck.
+  ellipse(cx, H + 4, 22, 16, (x, y) => (x > cx + 8 ? 0 : dither(x, y, 0, 1)));
+  rect(Math.round(cx - 4), faceY + 10, 8, 12, 2);
+  rect(Math.round(cx - 4), faceY + 10, 3, 12, 3);
+
+  // Face, side-lit.
+  ellipse(cx, faceY, rx, ry, (x) => lit(x));
+  set(cx - rx - 0.5, faceY + 1, 2);
+  set(cx + rx + 0.5, faceY + 1, 1);
+
+  // Hair.
+  const hair = pick(["short", "long", "bald", "spiky", "bandana", "slick"]);
+  const hairTone = pick([0, 0, 2]);
+  if (hair !== "bald") ellipse(cx, faceY - ry * 0.55, rx + 1.5, ry * 0.6, hairTone);
+  if (hair === "long") {
+    rect(Math.round(cx - rx - 2), faceY - 6, 4, 22, hairTone);
+    rect(Math.round(cx + rx - 2), faceY - 6, 4, 22, hairTone);
+  }
+  if (hair === "spiky") {
+    for (let i = -3; i <= 3; i++) for (let k = 0; k < 4; k++) set(cx + i * 3 + (k % 2), faceY - ry - 2 + k, hairTone);
+  }
+  if (hair === "bandana") rect(Math.round(cx - rx - 1), Math.round(faceY - ry * 0.45), Math.round(rx * 2 + 2), 3, 2);
+  if (hair === "slick") for (let x = Math.round(cx - rx); x < cx + rx; x += 3) set(x, faceY - ry * 0.7, 2);
+  // Re-open the forehead under the hairline.
+  ellipse(cx, faceY + 2, rx - 1, ry - 4, (x) => lit(x));
+
+  // Brows, eyes, glasses.
+  const eyeY = faceY - 1;
+  const eyeDx = 4 + Math.round(r());
+  const browTilt = pick([0, 1]);
+  for (const side of [-1, 1]) {
+    const ex = Math.round(cx + side * eyeDx);
+    rect(ex - 2, eyeY - 3 + (side === 1 ? browTilt : 0), 5, 1, 0);
+    rect(ex - 1, eyeY, 3, 1, 0);
+    set(ex + (side === -1 ? -1 : 1), eyeY, 4);
+  }
+  if (r() < 0.35) {
+    for (const side of [-1, 1]) {
+      const ex = Math.round(cx + side * eyeDx);
+      rect(ex - 3, eyeY - 2, 7, 1, 0);
+      rect(ex - 3, eyeY + 2, 7, 1, 0);
+      rect(ex - 3, eyeY - 2, 1, 5, 0);
+      rect(ex + 3, eyeY - 2, 1, 5, 0);
+    }
+    rect(Math.round(cx - 1), eyeY - 1, 2, 1, 0);
+  }
+
+  // Nose.
+  rect(Math.round(cx), eyeY + 2, 1, 4, 2);
+  rect(Math.round(cx) - 1, eyeY + 6, 3, 1, 2);
+
+  // Beard or stubble.
+  const beard = pick(["none", "none", "stubble", "beard", "moustache"]);
+  const mouthY = eyeY + 9;
+  if (beard === "stubble" || beard === "beard") {
+    ellipse(cx, faceY + ry * 0.6, rx * 0.85, ry * 0.45, (x, y) =>
+      beard === "beard" ? dither(x, y, 1, lit(x) - 1) : dither(x, y, lit(x), 2),
+    );
+  }
+  if (beard === "moustache" || beard === "beard") rect(Math.round(cx - 3), mouthY - 1, 7, 1, hairTone);
+
+  const closed = grid.slice();
+  rect(Math.round(cx - 2), mouthY, 5, 1, 1);
+  const quietGrid = grid.slice();
+  grid.set(closed);
+  rect(Math.round(cx - 2), mouthY, 5, 3, 0);
+  rect(Math.round(cx - 1), mouthY + 2, 3, 1, 1);
+  const talkGrid = grid;
+
+  const upscale = (g: Uint8Array): Levels => {
+    const out = new Uint8Array(SPRITE_W * SPRITE_H);
+    for (let y = 0; y < SPRITE_H; y++) {
+      for (let x = 0; x < SPRITE_W; x++) out[y * SPRITE_W + x] = g[Math.floor(y / S) * W + Math.floor(x / S)];
+    }
+    return out;
+  };
+  return {
+    quiet: toDataUrl(upscale(ink(quietGrid, W, H))),
+    talk: toDataUrl(upscale(ink(talkGrid, W, H))),
   };
 }

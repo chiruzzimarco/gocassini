@@ -21,3 +21,5 @@ public/manifest.json
 
 # Codec sound effects are supplied locally, never committed (game audio).
 public/codec-sfx/
+# Team portraits are people's faces: supplied locally, never committed.
+public/portraits/

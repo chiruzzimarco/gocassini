@@ -4,7 +4,8 @@
   import { StaticCatalogProvider, type DataProvider, type MeetingCatalogEntry } from "../viewer/dataProvider";
   import { formatMeetingDateShort, formatMeetingDuration } from "../viewer/catalog";
   import type { DisplayTranscriptBlock, TranscriptSpeaker } from "../core/types";
-  import { portraitFromImage, type Portrait } from "./portrait";
+  import { generatedPortrait, portraitFromImage, type Portrait } from "./portrait";
+  import { isAnonymous, loadTeamPortraits, type TeamPortraits } from "./team";
   import { MUSIC_URL, connect, hangUp, loadSamples, ring, staticBurst, tuneBlip } from "./sfx";
   import SevenSeg from "./SevenSeg.svelte";
   import Static from "./Static.svelte";
@@ -52,6 +53,9 @@
   let audioUrl = $state("");
   let title = $state("");
   let portraits = $state<Record<string, Portrait>>({});
+  // Known faces from the site's portraits/ folder; resolved before a meeting
+  // is shown, so a call never opens on the wrong face.
+  const team = loadTeamPortraits();
   let slots = $state<[string | null, string | null]>([null, null]);
   let timeMs = $state(0);
   let durationMs = $state(0);
@@ -205,7 +209,8 @@
     view = "call";
     call = "off";
     try {
-      present(await loadPortableArtifactFromAudioPath(src), name, name);
+      const [loaded, findTeam] = await Promise.all([loadPortableArtifactFromAudioPath(src), team]);
+      present(loaded, name, name, findTeam);
     } catch (e) {
       console.error("codec: could not open meeting", e);
       error = e instanceof Error ? e.message : String(e);
@@ -213,7 +218,7 @@
     }
   }
 
-  function present(loaded: LoadedArtifact, name: string, key: string) {
+  function present(loaded: LoadedArtifact, name: string, key: string, findTeam: TeamPortraits) {
     {
       artifact = loaded;
       audioUrl = loaded.audioSrc;
@@ -221,7 +226,13 @@
       title = loaded.metadata?.sections.flatMap((s) => s.rows).find((r) => r.label === "Title")?.value ?? name;
       durationMs = loaded.transcript.media.durationMs;
       const next: Record<string, Portrait> = {};
-      for (const s of loaded.transcript.speakers) if (portraits[s.id]) next[s.id] = portraits[s.id];
+      // A picture picked this session, else a known face, else a generated
+      // one; a speaker the recording could not name stays empty (white noise).
+      for (const s of loaded.transcript.speakers) {
+        const portrait =
+          portraits[s.id] ?? findTeam(s.label) ?? (isAnonymous(s.label) ? undefined : generatedPortrait(s.id));
+        if (portrait) next[s.id] = portrait;
+      }
       portraits = next;
       const order = [...new Set(loaded.displayTranscript?.blocks.map((b) => b.speaker).filter(Boolean))] as string[];
       slots = [order[0] ?? null, order[1] ?? null];
@@ -249,7 +260,7 @@
         await loadSamples(ctx);
         await Promise.all([ring(ctx), loading]);
       }
-      present(await loading, entry.title, entry.id);
+      present(await loading, entry.title, entry.id, await team);
       await tick();
       openLink();
     } catch (e) {
@@ -531,12 +542,14 @@
             {/if}
             {#if id && portraits[id] && call === "open"}
               <img
+                class:smooth={portraits[id].smooth}
                 src={id === speaking && mouthOpen ? portraits[id].talk : portraits[id].quiet}
                 alt={labelOf(id)}
                 draggable="false"
               />
-            {:else if id && call === "open"}
-              <!-- No picture of this speaker: a dead channel. -->
+            {:else if call === "open"}
+              <!-- No one in this frame, or no one the recording could name: a
+                   dead channel. -->
               <Static endless />
             {/if}
           </button>

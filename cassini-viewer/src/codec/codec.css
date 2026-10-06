@@ -94,6 +94,8 @@
   height: 100%;
   display: block;
   object-fit: cover;
+  /* Keep the face in frame when a wider picture is cropped to fit. */
+  object-position: 50% 30%;
   image-rendering: pixelated;
 }
 
@@ -582,4 +584,8 @@
     order: 3;
     flex: 1 0 100%;
   }
+}
+
+.codec .portrait img.smooth {
+  image-rendering: auto;
 }
