@@ -630,7 +630,7 @@
                   height={(100 / METER_BARS) * 0.74}
                 />
               {/each}
-              <ellipse class="shade" cx="100" cy="100" rx="86" ry="82" />
+              <ellipse class="shade" cx="100" cy="100" rx="86" ry="90" />
             </svg>
             <div class="freq"><SevenSeg value={frequency} /></div>
           </div>
