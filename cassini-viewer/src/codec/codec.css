@@ -409,14 +409,8 @@
   box-shadow: 0 0 var(--u) rgb(120 210 120 / 0.25);
 }
 
-.codec .contact.selected .cfreq::before {
-  content: "▶ ";
-  position: absolute;
-  margin-left: -calc(1.6 * var(--u));
-}
 
 .codec .cfreq {
-  position: relative;
   font-family: "Courier New", ui-monospace, monospace;
   font-weight: bold;
   letter-spacing: 0.05em;
@@ -557,9 +551,6 @@
     font-size: 12px;
   }
 
-  .codec .contact.selected .cfreq::before {
-    content: none;
-  }
 
   .codec .contacts-hint,
   .codec .exit {
