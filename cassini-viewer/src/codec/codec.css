@@ -3,14 +3,14 @@
    * width on a desktop, larger on a phone so the unit fills the width. */
   --u: 1cqw;
   --bg: #000;
-  --g0: #04140a;
-  --g1: #124624;
-  --g2: #348c46;
-  --g3: #78d278;
-  --g4: #c8ffbe;
-  --rail: #1d4a2a;
+  --g0: #06120d;
+  --g1: #18402f;
+  --g2: #3f8166;
+  --g3: #83c7ac;
+  --g4: #c6f7e6;
+  --rail: #234436;
   --text: #e4e4e4;
-  --glow: 0 0 6px rgb(120 210 120 / 0.7);
+  --glow: 0 0 6px rgb(131 199 172 / 0.7);
   color-scheme: dark;
 }
 
@@ -74,10 +74,10 @@
   aspect-ratio: 13 / 20;
   padding: 0;
   /* A mid green with a soft glow; the picture, not the frame, is the bright part. */
-  border: calc(0.3 * var(--u)) solid #3f9a5d;
+  border: calc(0.3 * var(--u)) solid #4a8f72;
   border-radius: calc(0.5 * var(--u));
   box-shadow:
-    0 0 calc(0.7 * var(--u)) rgb(90 190 120 / 0.35),
+    0 0 calc(0.7 * var(--u)) rgb(103 178 146 / 0.35),
     inset 0 0 0 calc(0.2 * var(--u)) #000;
   background: var(--g0);
   overflow: hidden;
@@ -148,7 +148,7 @@
   position: absolute;
   left: calc(2.2 * var(--u));
   right: calc(2.2 * var(--u));
-  border-top: 1px solid #34433a;
+  border-top: 1px solid #36413c;
   pointer-events: none;
 }
 
@@ -171,7 +171,7 @@
   right: calc(-1.4 * var(--u));
   top: calc(0.15 * var(--u));
   bottom: calc(0.15 * var(--u));
-  border: 1px solid #3b4a40;
+  border: 1px solid #3d4843;
   pointer-events: none;
 }
 
@@ -193,7 +193,7 @@
   width: calc(14.5 * var(--u));
   padding: 0;
   border: 0;
-  background: #26332e;
+  background: #28312d;
   font-family: inherit;
   /* The dot font made bold for the chunky pixel letters. */
   font-weight: 900;
@@ -229,12 +229,12 @@
 
 .codec .ctab.ptt,
 .codec .ctab.memory.lit {
-  color: #b9ffd6;
-  text-shadow: 0 0 calc(0.5 * var(--u)) rgb(120 255 180 / 0.55);
+  color: #c2f6e4;
+  text-shadow: 0 0 calc(0.5 * var(--u)) rgb(137 238 200 / 0.55);
 }
 
 .codec .ctab.memory {
-  color: #4d6659;
+  color: #50635b;
 }
 
 .codec .tuner {
@@ -246,10 +246,10 @@
 
 .codec .arrow {
   font-size: calc(1.5 * var(--u));
-  color: #4f6c58;
-  border: 1px solid #2c3d31;
+  color: #53685f;
+  border: 1px solid #2e3b36;
   padding: calc(0.3 * var(--u)) calc(0.7 * var(--u));
-  background: #0b0f0c;
+  background: #0c0e0d;
 }
 
 /* The display: a dark panel with no side borders, a bar above and below it
@@ -258,7 +258,7 @@
   position: relative;
   width: calc(19 * var(--u));
   aspect-ratio: 3 / 2;
-  background: #1c2925;
+  background: #1e2723;
   box-shadow: inset 0 0 calc(0.6 * var(--u)) rgb(0 0 0 / 0.6);
 }
 
@@ -270,9 +270,9 @@
   right: calc(-1.4 * var(--u));
   height: calc(0.32 * var(--u));
   background:
-    linear-gradient(#4c5c54, #4c5c54) left center / calc(0.9 * var(--u)) 100% no-repeat,
-    linear-gradient(#4c5c54, #4c5c54) right center / calc(0.9 * var(--u)) 100% no-repeat,
-    linear-gradient(#3e4c46, #3e4c46) center / 100% 55% no-repeat;
+    linear-gradient(#4e5a55, #4e5a55) left center / calc(0.9 * var(--u)) 100% no-repeat,
+    linear-gradient(#4e5a55, #4e5a55) right center / calc(0.9 * var(--u)) 100% no-repeat,
+    linear-gradient(#404a46, #404a46) center / 100% 55% no-repeat;
   pointer-events: none;
 }
 
@@ -304,7 +304,7 @@
 
 .codec .meter span.on {
   background: var(--g3);
-  box-shadow: 0 0 4px rgb(120 210 120 / 0.6);
+  box-shadow: 0 0 4px rgb(131 199 172 / 0.6);
 }
 
 /* Digits sit bottom right, inside the curve the bars leave open. */
@@ -450,7 +450,7 @@
 }
 
 .codec .ctab.memory.lit {
-  background: #2c3a34;
+  background: #2e3834;
 }
 
 /* In MEMORY the unit itself is lit; only the frames stay empty. */
@@ -491,8 +491,8 @@
 .codec .contact.selected {
   color: var(--g4);
   border-color: var(--g2);
-  background: linear-gradient(90deg, rgb(52 140 70 / 0.35), rgb(52 140 70 / 0.08));
-  box-shadow: 0 0 var(--u) rgb(120 210 120 / 0.25);
+  background: linear-gradient(90deg, rgb(63 129 102 / 0.35), rgb(63 129 102 / 0.08));
+  box-shadow: 0 0 var(--u) rgb(131 199 172 / 0.25);
 }
 
 
@@ -667,6 +667,9 @@
 
 .codec .portrait img.smooth {
   image-rendering: auto;
+  /* Team illustrations come in a pure green (hue ~115°); turn them towards the
+   * codec's mint (~155°) and calm them a little, as the rest of the palette. */
+  filter: hue-rotate(32deg) saturate(0.8);
 }
 
 /* The meeting still on the line while MEMORY is open. */
@@ -680,7 +683,7 @@
   color: var(--g4);
   border-color: var(--g3);
   background: var(--g1);
-  box-shadow: 0 0 calc(0.8 * var(--u)) rgb(120 210 120 / 0.6);
+  box-shadow: 0 0 calc(0.8 * var(--u)) rgb(131 199 172 / 0.6);
   text-shadow: var(--glow);
 }
 

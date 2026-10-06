@@ -13,23 +13,23 @@ export const SPRITE_W = 96;
 export const SPRITE_H = 120;
 
 const PALETTE: [number, number, number][] = [
-  [4, 20, 10],
-  [18, 70, 36],
-  [52, 140, 70],
-  [120, 210, 120],
-  [200, 255, 190],
+  [6, 18, 13],
+  [24, 64, 47],
+  [63, 129, 102],
+  [131, 199, 172],
+  [198, 247, 230],
 ];
 
 // Photos get a longer ramp: flat painted tones, near-black shadows, pale
 // highlights. No dithering; MGS portraits are cel-shaded, not halftoned.
 const PHOTO_PALETTE: [number, number, number][] = [
-  [2, 10, 5],
-  [12, 42, 22],
-  [28, 82, 44],
-  [56, 130, 70],
-  [100, 182, 104],
-  [158, 226, 150],
-  [214, 255, 204],
+  [3, 9, 7],
+  [16, 38, 29],
+  [35, 75, 58],
+  [65, 121, 98],
+  [110, 172, 146],
+  [160, 217, 195],
+  [210, 249, 236],
 ];
 
 // Where the mouth sits, as a fraction of the sprite height. Rows below it drop

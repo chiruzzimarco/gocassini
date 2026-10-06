@@ -106,7 +106,7 @@ async function openMouth(src: string, [mx, my, mw]: [number, number, number]): P
   ctx.putImageData(after, 0, 0);
   // The opening: a soft dark ellipse along the lip line.
   ctx.filter = `blur(${Math.max(1, drop * 0.3)}px)`;
-  ctx.fillStyle = "rgba(2, 12, 6, 0.82)";
+  ctx.fillStyle = "rgba(3, 11, 8, 0.82)";
   ctx.beginPath();
   ctx.ellipse(cx, lip + drop * 0.45, half * 0.78, drop * 0.55, 0, 0, Math.PI * 2);
   ctx.fill();

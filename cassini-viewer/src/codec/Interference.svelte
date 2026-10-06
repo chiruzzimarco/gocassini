@@ -34,10 +34,10 @@
       const band = BAND_HEIGHT * H;
       const by = ((t % BAND_PERIOD) / BAND_PERIOD) * (H + band) - band;
       const grad = ctx.createLinearGradient(0, by, 0, by + band);
-      grad.addColorStop(0, "rgba(200, 255, 190, 0)");
-      grad.addColorStop(0.35, `rgba(200, 255, 190, ${0.27 * strength})`);
-      grad.addColorStop(0.65, `rgba(200, 255, 190, ${0.27 * strength})`);
-      grad.addColorStop(1, "rgba(200, 255, 190, 0)");
+      grad.addColorStop(0, "rgba(198, 247, 230, 0)");
+      grad.addColorStop(0.35, `rgba(198, 247, 230, ${0.27 * strength})`);
+      grad.addColorStop(0.65, `rgba(198, 247, 230, ${0.27 * strength})`);
+      grad.addColorStop(1, "rgba(198, 247, 230, 0)");
       ctx.fillStyle = grad;
       ctx.fillRect(0, by, W, band);
 
@@ -45,9 +45,9 @@
       const phase = t % LINE_PERIOD;
       if (phase < LINE_TRAVEL) {
         const ly = Math.round((phase / LINE_TRAVEL) * H);
-        ctx.fillStyle = `rgba(215, 255, 205, ${0.4 * strength})`;
+        ctx.fillStyle = `rgba(211, 249, 236, ${0.4 * strength})`;
         ctx.fillRect(0, ly, W, 1);
-        ctx.fillStyle = `rgba(215, 255, 205, ${0.12 * strength})`;
+        ctx.fillStyle = `rgba(211, 249, 236, ${0.12 * strength})`;
         ctx.fillRect(0, ly - 1, W, 1);
         ctx.fillRect(0, ly + 1, W, 1);
       }
