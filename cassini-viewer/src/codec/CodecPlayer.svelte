@@ -587,7 +587,8 @@
               <Static endless />
             {/if}
           </button>
-          <span class="name">{labelOf(id)}</span>
+          <!-- Names belong to the faces: only while the call is connected. -->
+          <span class="name">{call === "open" ? labelOf(id) : ""}</span>
         </div>
       {/each}
 
