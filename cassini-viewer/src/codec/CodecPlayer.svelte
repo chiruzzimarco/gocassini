@@ -4,7 +4,7 @@
   import { StaticCatalogProvider, type DataProvider, type MeetingCatalogEntry } from "../viewer/dataProvider";
   import { formatMeetingDateShort, formatMeetingDuration } from "../viewer/catalog";
   import type { DisplayTranscriptBlock, TranscriptSpeaker } from "../core/types";
-  import { generatedPortrait, portraitFromImage, type Portrait } from "./portrait";
+  import { portraitFromImage, type Portrait } from "./portrait";
   import { MUSIC_URL, connect, hangUp, loadSamples, ring, staticBurst, tuneBlip } from "./sfx";
   import SevenSeg from "./SevenSeg.svelte";
   import Static from "./Static.svelte";
@@ -221,7 +221,7 @@
       title = loaded.metadata?.sections.flatMap((s) => s.rows).find((r) => r.label === "Title")?.value ?? name;
       durationMs = loaded.transcript.media.durationMs;
       const next: Record<string, Portrait> = {};
-      for (const s of loaded.transcript.speakers) next[s.id] = portraits[s.id] ?? generatedPortrait(s.id);
+      for (const s of loaded.transcript.speakers) if (portraits[s.id]) next[s.id] = portraits[s.id];
       portraits = next;
       const order = [...new Set(loaded.displayTranscript?.blocks.map((b) => b.speaker).filter(Boolean))] as string[];
       slots = [order[0] ?? null, order[1] ?? null];
@@ -535,6 +535,9 @@
                 alt={labelOf(id)}
                 draggable="false"
               />
+            {:else if id && call === "open"}
+              <!-- No picture of this speaker: a dead channel. -->
+              <Static endless />
             {/if}
           </button>
           <span class="name">{labelOf(id)}</span>

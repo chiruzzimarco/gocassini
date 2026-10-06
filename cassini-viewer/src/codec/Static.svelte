@@ -2,9 +2,10 @@
   import { onMount } from "svelte";
 
   // A couple of frames of colour TV snow over a portrait, then a hard cut to
-  // the picture, as the game does when someone new comes on.
-  // Mounted fresh (via {#key}) for every cut.
-  let { durationMs = 140 }: { durationMs?: number } = $props();
+  // the picture, as the game does when someone new comes on. Mounted fresh
+  // (via {#key}) for every cut. With `endless`, black-and-white snow that never
+  // stops: the portrait of a speaker there is no picture of.
+  let { durationMs = 140, endless = false }: { durationMs?: number; endless?: boolean } = $props();
 
   const W = 52;
   const H = 80;
@@ -17,16 +18,20 @@
     const start = performance.now();
     let raf = 0;
     const frame = (now: number) => {
-      const t = (now - start) / durationMs;
+      const t = endless ? 0 : (now - start) / durationMs;
       if (t >= 1) {
         opacity = 0;
         return;
       }
       for (let i = 0; i < W * H; i++) {
         const v = Math.random() * 255;
-        img.data[i * 4] = Math.min(255, v * (0.6 + Math.random() * 0.6));
-        img.data[i * 4 + 1] = Math.min(255, v * (0.6 + Math.random() * 0.6));
-        img.data[i * 4 + 2] = Math.min(255, v * (0.6 + Math.random() * 0.6));
+        if (endless) {
+          img.data[i * 4] = img.data[i * 4 + 1] = img.data[i * 4 + 2] = v * 0.85;
+        } else {
+          img.data[i * 4] = Math.min(255, v * (0.6 + Math.random() * 0.6));
+          img.data[i * 4 + 1] = Math.min(255, v * (0.6 + Math.random() * 0.6));
+          img.data[i * 4 + 2] = Math.min(255, v * (0.6 + Math.random() * 0.6));
+        }
         img.data[i * 4 + 3] = 255;
       }
       ctx.putImageData(img, 0, 0);
