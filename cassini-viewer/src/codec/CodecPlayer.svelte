@@ -455,7 +455,9 @@
       e.preventDefault();
       return;
     }
-    if (e.code === "Escape") {
+    // Down opens MEMORY, as Escape does: hang up and back to the list.
+    if (e.code === "Escape" || e.code === "ArrowDown") {
+      e.preventDefault();
       hangup();
       return;
     }
@@ -646,7 +648,7 @@
       />
       <span class="clock">{clock(timeMs)} / {clock(durationMs)}</span>
       {#if entries.length}
-        <button class="call" onclick={hangup}>✕ HANG UP</button>
+        <button class="call" onclick={hangup} title="Back to MEMORY (↓ or Esc)">✕ HANG UP</button>
       {/if}
     </div>
   {/if}
