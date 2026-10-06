@@ -527,7 +527,7 @@
               {/key}
             {/if}
             {#if id && call === "open"}
-              <Interference active={id === speaking && talking} {level} />
+              <Interference active={playing} />
             {/if}
             {#if id && portraits[id] && call === "open"}
               <img

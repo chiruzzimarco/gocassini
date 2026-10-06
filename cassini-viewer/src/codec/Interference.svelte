@@ -1,10 +1,16 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
-  // Transmission noise over the portrait of whoever is talking: a few soft
-  // horizontal lines drifting steadily up or down the picture, as on the
-  // codec. They brighten with the voice and fade out in silence.
-  let { active = false, level = 0 }: { active?: boolean; level?: number } = $props();
+  // Interference on the link: now and then a few soft horizontal lines drift
+  // up or down a portrait for a few seconds, then the picture clears again,
+  // whoever is speaking. Each portrait gets its own random episodes; active
+  // is whether the call is open at all.
+  let { active = false }: { active?: boolean } = $props();
+
+  // How long an episode lasts, and the clear spell between two, in ms.
+  const EPISODE_MS = [1200, 4500];
+  const CLEAR_MS = [1500, 7000];
+  const between = ([lo, hi]: number[]) => lo + Math.random() * (hi - lo);
 
   const W = 104;
   const H = 160;
@@ -30,10 +36,19 @@
     const lines = Array.from({ length: LINES }, () => spawn());
     let strength = 0;
     let raf = 0;
-    const frame = () => {
+    let interfering = false;
+    // Start clear, so the two portraits don't light up together on connect.
+    let switchAt = performance.now() + between(CLEAR_MS);
+    let peak = 1;
+    const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
+      if (now >= switchAt) {
+        interfering = !interfering;
+        switchAt = now + between(interfering ? EPISODE_MS : CLEAR_MS);
+        peak = 0.6 + Math.random() * 0.4;
+      }
       // Ease towards the target so the lines fade rather than snap.
-      const target = active ? Math.min(1, 0.55 + level * 1.2) : 0;
+      const target = active && interfering ? peak : 0;
       strength += (target - strength) * 0.12;
       ctx.clearRect(0, 0, W, H);
       if (strength < 0.01) return;
