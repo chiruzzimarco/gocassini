@@ -262,6 +262,9 @@
       }
       present(await loading, entry.title, entry.id, await team);
       await tick();
+      // A new call starts from the top, even of a meeting heard before: the
+      // element keeps its position when the file is the same one.
+      if (audio) audio.currentTime = 0;
       openLink();
     } catch (e) {
       console.error(`codec: could not dial ${entry.id}`, e);
