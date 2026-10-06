@@ -288,6 +288,24 @@
     if (at >= 0) cursor = at;
   }
 
+  // MEMORY over a call that keeps playing: browse, then come back to it.
+  function openMemory() {
+    if (view !== "call" || !entries.length || call === "ringing") return;
+    view = "memory";
+    const at = entries.findIndex((e) => e.id === freqKey);
+    if (at >= 0) cursor = at;
+  }
+
+  function backToCall() {
+    if (call === "open") view = "call";
+  }
+
+  // Calling from MEMORY: the meeting already on the line is just returned to.
+  function pick(entry: MeetingCatalogEntry) {
+    if (call === "open" && entry.id === freqKey) backToCall();
+    else void dial(entry);
+  }
+
   function exit() {
     if (!onexit) return;
     audio?.pause();
@@ -443,21 +461,27 @@
     if ((e.target as HTMLElement)?.tagName === "INPUT") return;
     if (view === "memory") {
       if (e.code === "Escape") {
-        exit();
+        // Back to a call still on the line; otherwise out of the codec.
+        if (call === "open") backToCall();
+        else exit();
         return;
       }
       if (e.code === "ArrowUp" || e.code === "ArrowLeft") moveCursor(-1);
       else if (e.code === "ArrowDown" || e.code === "ArrowRight") moveCursor(1);
       else if (e.code === "Enter" || e.code === "Space") {
         e.preventDefault();
-        if (entries[cursor]) void dial(entries[cursor]);
+        if (entries[cursor]) pick(entries[cursor]);
       } else return;
       e.preventDefault();
       return;
     }
-    // Down opens MEMORY, as Escape does: hang up and back to the list.
-    if (e.code === "Escape" || e.code === "ArrowDown") {
+    // Down opens MEMORY over the call, which keeps playing; Escape hangs up.
+    if (e.code === "ArrowDown") {
       e.preventDefault();
+      openMemory();
+      return;
+    }
+    if (e.code === "Escape") {
       hangup();
       return;
     }
@@ -577,7 +601,12 @@
           <button class="arrow" aria-label="Next frequency" disabled={view !== "memory"} onclick={() => moveCursor(1)}>▶</button>
         </div>
         <div class="rail">
-          <button class="ctab memory" class:lit={view === "memory"} disabled={!entries.length} onclick={hangup}>MEMORY</button>
+          <button
+            class="ctab memory"
+            class:lit={view === "memory"}
+            disabled={!entries.length}
+            onclick={() => (view === "memory" ? backToCall() : openMemory())}
+          >MEMORY</button>
         </div>
       </div>
     </div>
@@ -588,7 +617,7 @@
           <!-- A desktop shows five rows around the cursor, as the game does; a
                phone scrolls the whole list. Tapping or clicking a row calls it. -->
           <li class:far={Math.abs(i - Math.min(Math.max(cursor, 2), entries.length - 3)) > 2}>
-              <button class="contact" class:selected={i === cursor} onclick={() => { cursor = i; void dial(entry); }}>
+              <button class="contact" class:selected={i === cursor} class:on-air={call === "open" && entry.id === freqKey} onclick={() => { cursor = i; pick(entry); }}>
                 <span class="cfreq">{freqOf(entry.id)}</span>
                 <span class="ctitle">{entry.title}</span>
                 <span class="cmeta">
@@ -603,7 +632,7 @@
           <span class="notice">{notice}</span>
         {:else}
           {cursor + 1} / {entries.length}
-          <span class="keys">&nbsp;·&nbsp; ↑↓ TUNE &nbsp;·&nbsp; ENTER CALL{#if uploads}&nbsp;·&nbsp; DROP A .OPUS TO ADD IT{/if}</span>
+          <span class="keys">&nbsp;·&nbsp; ↑↓ TUNE &nbsp;·&nbsp; ENTER CALL{#if call === "open"}&nbsp;·&nbsp; ESC BACK TO CALL{:else if uploads}&nbsp;·&nbsp; DROP A .OPUS TO ADD IT{/if}</span>
           <span class="touch">&nbsp;·&nbsp; TAP A MEETING TO CALL</span>
         {/if}
       </div>

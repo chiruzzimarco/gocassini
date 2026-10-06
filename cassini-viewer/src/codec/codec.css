@@ -589,3 +589,9 @@
 .codec .portrait img.smooth {
   image-rendering: auto;
 }
+
+/* The meeting still on the line while MEMORY is open. */
+.codec .contact.on-air .ctitle::after {
+  content: " ◉";
+  color: var(--g3);
+}
