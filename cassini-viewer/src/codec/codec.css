@@ -398,15 +398,41 @@
   }
 }
 
-/* Before the call opens: the unit sits dim with empty frames, as in the game
- * before the faces come up. */
+/* Before the call opens there are no portrait frames, only the dimmed centre
+ * unit. When it opens, the meter powers up first and then each portrait
+ * opens from a thin strip across its middle to full height, in a few steps,
+ * bright and smeared until it settles: the codec's own opening. */
 .codec .screen.standby .unit {
   filter: brightness(0.55) saturate(0.6);
 }
 
 .codec .screen.standby .portrait {
-  border-color: var(--g1);
-  box-shadow: none;
+  visibility: hidden;
+}
+
+.codec .screen:not(.standby) .portrait {
+  animation: codec-portrait-open 210ms steps(6, jump-start) 430ms both;
+}
+
+/* Hidden while the meter powers up (the delay holds the first keyframe), then
+ * six steps from a strip to the full picture. */
+@keyframes codec-portrait-open {
+  from {
+    visibility: hidden;
+    transform: scaleY(0.06);
+    filter: brightness(1.7) blur(1.2px);
+  }
+  to {
+    visibility: visible;
+    transform: scaleY(1);
+    filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .codec .screen:not(.standby) .portrait {
+    animation: none;
+  }
 }
 
 .codec .prompt {

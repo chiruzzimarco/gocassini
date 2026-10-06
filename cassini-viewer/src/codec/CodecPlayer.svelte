@@ -277,8 +277,13 @@
     }
   }
 
+  // When the link opened: the meter powers up from then (see frame()), and the
+  // portraits open after it (codec.css), as on the codec.
+  let openedAt = 0;
+
   function openLink() {
     if (audioCtx) connect(audioCtx);
+    openedAt = performance.now();
     call = "open";
     void audio?.play();
   }
@@ -508,14 +513,31 @@
   }
 
   const buf = new Uint8Array(512);
-  function frame() {
+  // The meter's power-up as the link opens: up to three quarters in 450 ms,
+  // then back down to the voice over the next 600 ms.
+  const RISE_MS = 450;
+  const SETTLE_MS = 600;
+  function powerUp(now: number): number {
+    const t = now - openedAt;
+    if (!openedAt || t < 0) return 0;
+    if (t < RISE_MS) return 0.75 * (t / RISE_MS);
+    return Math.max(0, 0.75 * (1 - (t - RISE_MS) / SETTLE_MS));
+  }
+
+  function frame(now: number) {
     if (audio) timeMs = audio.currentTime * 1000;
+    let voice = 0;
     if (analyser) {
       analyser.getByteTimeDomainData(buf);
       let sum = 0;
       for (const v of buf) sum += ((v - 128) / 128) ** 2;
-      level = Math.min(1, Math.sqrt(sum / buf.length) * 6);
+      voice = Math.min(1, Math.sqrt(sum / buf.length) * 6);
     }
+    // While the meter powers up it ignores the voice, so the climb is clean
+    // rather than flashing on the first sound of the meeting.
+    const sinceOpen = now - openedAt;
+    level =
+      call !== "open" ? voice : sinceOpen < RISE_MS ? powerUp(now) : Math.max(voice, powerUp(now));
     raf = requestAnimationFrame(frame);
   }
 
