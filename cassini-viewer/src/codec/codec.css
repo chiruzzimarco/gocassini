@@ -24,7 +24,8 @@
   min-height: 100vh;
   background: var(--bg);
   color: var(--text);
-  font-family: Helvetica, Arial, sans-serif;
+  /* The retro dialogue font everywhere on the codec; LCD digits are drawn. */
+  font-family: "Codec Dialogue", Helvetica, Arial, sans-serif;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -190,10 +191,11 @@
   border: 0;
   background: #26332e;
   font-family: inherit;
+  /* The dot font made bold: chunky pixel letters, tightly set, as on the tabs. */
   font-weight: 900;
-  font-size: calc(1.5 * var(--u));
-  letter-spacing: 0.35em;
-  text-indent: 0.35em;
+  font-size: calc(1.8 * var(--u));
+  letter-spacing: 0.14em;
+  text-indent: 0.14em;
 }
 
 .codec .ctab.ptt,
@@ -288,7 +290,7 @@
 
 .codec .subtitle {
   /* The codec's dialogue: light grey, plain, slightly pixelated. */
-  font-family: "Codec Dialogue", Helvetica, Arial, sans-serif;
+  font-family: inherit;
   letter-spacing: 0.02em;
   position: absolute;
   left: 12%;
@@ -336,7 +338,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  font-family: "Courier New", ui-monospace, monospace;
+  font-family: inherit;
 }
 
 .codec .controls input[type="range"] {
@@ -431,7 +433,7 @@
   position: absolute;
   left: 21%;
   right: 21%;
-  top: 60%;
+  top: 59%;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -446,11 +448,12 @@
   grid-template-columns: calc(7.5 * var(--u)) 1fr auto;
   align-items: baseline;
   gap: calc(1.6 * var(--u));
-  padding: calc(0.45 * var(--u)) calc(1.2 * var(--u));
+  padding: calc(0.3 * var(--u)) calc(1.2 * var(--u));
+  line-height: 1.2;
   border: 1px solid transparent;
   background: transparent;
   color: var(--g2);
-  font-family: Helvetica, Arial, sans-serif;
+  font-family: inherit;
   font-size: calc(1.6 * var(--u));
   text-align: left;
   cursor: pointer;
@@ -465,7 +468,7 @@
 
 
 .codec .cfreq {
-  font-family: "Courier New", ui-monospace, monospace;
+  font-family: inherit;
   font-weight: bold;
   letter-spacing: 0.05em;
 }
