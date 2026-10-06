@@ -12,6 +12,9 @@
   import Interference from "./Interference.svelte";
   import { UploadUnavailableError, describeDropped, uploadMeeting } from "./upload";
   import "./codec.css";
+  // The dialogue font, DotGothic16 (SIL OFL, fonts/OFL.txt), inlined so it
+  // travels inside single-file builds too.
+  import dialogueFont from "./fonts/DotGothic16.woff2?inline";
 
   // The meeting list comes from the same provider the viewer browses with:
   // catalog.json standalone, the operator's list when embedded.
@@ -521,7 +524,19 @@
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
   };
 
+  // Registered with the document rather than in codec.css: a @font-face inside
+  // a shadow root (the Nextcloud app renders in one) is not honoured.
+  function loadDialogueFont() {
+    if ([...document.fonts].some((f) => f.family === "Codec Dialogue")) return;
+    const face = new FontFace("Codec Dialogue", `url(${dialogueFont}) format("woff2")`);
+    face
+      .load()
+      .then((loaded) => document.fonts.add(loaded))
+      .catch((e) => console.warn("codec: dialogue font did not load, using the fallback", e));
+  }
+
   onMount(() => {
+    loadDialogueFont();
     raf = requestAnimationFrame(frame);
     const src = new URLSearchParams(location.search).get("src");
     if (src) {

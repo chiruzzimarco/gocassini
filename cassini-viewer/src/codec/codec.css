@@ -234,6 +234,9 @@
 /* ── Dialogue ──────────────────────────────────────────────────────────── */
 
 .codec .subtitle {
+  /* The codec's dialogue: light grey, plain, slightly pixelated. */
+  font-family: "Codec Dialogue", Helvetica, Arial, sans-serif;
+  letter-spacing: 0.02em;
   position: absolute;
   left: 12%;
   right: 12%;
