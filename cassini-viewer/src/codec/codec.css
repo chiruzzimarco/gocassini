@@ -243,13 +243,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: calc(6 * var(--u));
-  height: calc(2.7 * var(--u));
+  width: calc(4.8 * var(--u));
+  height: calc(2.2 * var(--u));
   padding: 0;
   border: 0;
   background: #26302c;
   color: #5c7469;
-  font-size: calc(2 * var(--u));
+  font-size: calc(1.6 * var(--u));
   line-height: 1;
 }
 
