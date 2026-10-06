@@ -278,8 +278,9 @@
   }
 
   // Hang up and go back to the list, cursor still on the meeting just called.
+  // From the call, or from MEMORY open over it.
   function hangup() {
-    if (view !== "call" || !entries.length || call === "ringing") return;
+    if (!entries.length || call === "ringing" || (view !== "call" && call !== "open")) return;
     audio?.pause();
     if (audioCtx) hangUp(audioCtx);
     call = "off";
@@ -661,7 +662,8 @@
     {/if}
   </div>
 
-  {#if phase === "ready" && view === "call"}
+  <!-- The player stays while MEMORY is open over a call still on the line. -->
+  {#if phase === "ready" && (view === "call" || call === "open")}
     <div class="controls">
       <button class="call" onclick={toggle} disabled={call === "ringing"}>
         {call === "ringing" ? "RINGING" : playing ? "■ HOLD" : call === "off" ? "▶ CALL" : "▶ RESUME"}
