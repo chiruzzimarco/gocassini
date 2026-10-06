@@ -8,6 +8,7 @@
   import { MUSIC_URL, connect, hangUp, loadSamples, ring, staticBurst, tuneBlip } from "./sfx";
   import SevenSeg from "./SevenSeg.svelte";
   import Static from "./Static.svelte";
+  import Interference from "./Interference.svelte";
   import { UploadUnavailableError, describeDropped, uploadMeeting } from "./upload";
   import "./codec.css";
 
@@ -524,6 +525,9 @@
               {#key `${id}:${cuts[side]}`}
                 <Static />
               {/key}
+            {/if}
+            {#if id && call === "open"}
+              <Interference active={id === speaking && talking} {level} />
             {/if}
             {#if id && portraits[id] && call === "open"}
               <img
