@@ -5,8 +5,8 @@
 export interface Portrait {
   quiet: string;
   talk: string;
-  // A full illustration rather than a pixel sprite: scale it smoothly.
-  smooth?: boolean;
+  // A team illustration: recoloured on screen to the codec's palette.
+  team?: boolean;
 }
 
 export const SPRITE_W = 96;

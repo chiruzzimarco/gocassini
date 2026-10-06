@@ -657,8 +657,7 @@
   }
 }
 
-.codec .portrait img.smooth {
-  image-rendering: auto;
+.codec .portrait img.team {
   /* Team illustrations come in a pure green (hue ~115°); turn them towards the
    * codec's mint (~155°) and calm them a little, as the rest of the palette. */
   filter: hue-rotate(32deg) saturate(0.8);

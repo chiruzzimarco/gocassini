@@ -6,7 +6,7 @@
   import type { DisplayTranscriptBlock, TranscriptSpeaker } from "../core/types";
   import { generatedPortrait, portraitFromImage, type Portrait } from "./portrait";
   import { isAnonymous, loadTeamPortraits, type TeamPortraits } from "./team";
-  import { MUSIC_URL, connect, hangUp, loadSamples, ring, staticBurst, tuneBlip } from "./sfx";
+  import { MUSIC_URL, connect, hangUp, loadSamples, ring, tuneBlip } from "./sfx";
   import SevenSeg from "./SevenSeg.svelte";
   import Static from "./Static.svelte";
   import PixelText from "./PixelText.svelte";
@@ -197,12 +197,11 @@
       else if (b === null) slots = [a, id];
       else slots = (lastSpoke.get(a) ?? -1) <= (lastSpoke.get(b) ?? -1) ? [id, b] : [a, id];
     }
-    // A cut to someone else: static on their portrait, and a hiss.
+    // A cut to someone else: static on their portrait, silently.
     if (id !== lastSpeaker) {
       if (lastSpeaker !== null) {
         const side = slots.indexOf(id);
         cuts = side === 0 ? [cuts[0] + 1, cuts[1]] : [cuts[0], cuts[1] + 1];
-        if (playing && audioCtx) staticBurst(audioCtx);
       }
       lastSpeaker = id;
     }
@@ -595,7 +594,7 @@
             {/if}
             {#if id && portraits[id] && call === "open"}
               <img
-                class:smooth={portraits[id].smooth}
+                class:team={portraits[id].team}
                 src={id === speaking && mouthOpen ? portraits[id].talk : portraits[id].quiet}
                 alt={labelOf(id)}
                 draggable="false"

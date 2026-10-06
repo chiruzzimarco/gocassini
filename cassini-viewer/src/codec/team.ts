@@ -51,11 +51,31 @@ export async function loadTeamPortraits(): Promise<TeamPortraits> {
           console.warn(`codec: could not draw a talking frame for ${entry.image}`, e);
         }
       }
-      for (const name of entry.names) byName.set(norm(name), { quiet, talk, smooth: true });
+      // Down to about the game's portrait resolution, shown with hard pixels.
+      const [quietPx, talkPx] = await Promise.all([pixelate(quiet), talk === quiet ? null : pixelate(talk)]);
+      const portrait = { quiet: quietPx, talk: talkPx ?? quietPx, team: true };
+      for (const name of entry.names) byName.set(norm(name), portrait);
     }),
   );
   // A label matches on the whole name, or on its first word ("Alex Rossi").
   return (label) => byName.get(norm(label)) ?? byName.get(norm(label.split(/\s+/)[0] ?? ""));
+}
+
+// Picture height in pixels after pixelating: the visible face ends up about
+// 70 pixels across, like the PlayStation codec's portraits.
+const PIXEL_HEIGHT = 108;
+
+async function pixelate(src: string): Promise<string> {
+  const img = new Image();
+  img.src = src;
+  await img.decode();
+  const canvas = document.createElement("canvas");
+  canvas.height = PIXEL_HEIGHT;
+  canvas.width = Math.round((img.naturalWidth * PIXEL_HEIGHT) / img.naturalHeight);
+  const ctx = canvas.getContext("2d")!;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL("image/png");
 }
 
 /**

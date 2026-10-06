@@ -1,18 +1,18 @@
-// Codec sound effects: the incoming-call ring, the link opening, and a burst
-// of static for cuts between speakers.
+// Codec sound effects: the incoming-call ring, the link opening and closing,
+// and the blip of tuning through MEMORY.
 //
 // Each one plays a local recording from `codec-sfx/` when one is there
-// (ring.mp3, open.mp3, static.mp3, close.mp3; git-ignored, never committed, because the
+// (ring.mp3, open.mp3, close.mp3; git-ignored, never committed, because the
 // originals are the game's audio) and falls back to a Web Audio imitation.
 
-type Sample = "ring" | "open" | "static" | "close";
+type Sample = "ring" | "open" | "close";
 const samples = new Map<Sample, AudioBuffer>();
 let loading: Promise<void> | null = null;
 
 /** Loads whichever local recordings exist. Safe to call repeatedly. */
 export function loadSamples(ctx: AudioContext): Promise<void> {
   loading ??= Promise.all(
-    (["ring", "open", "static", "close"] as const).map(async (name) => {
+    (["ring", "open", "close"] as const).map(async (name) => {
       const url = new URL(`codec-sfx/${name}.mp3`, document.baseURI).toString();
       try {
         const res = await fetch(url);
@@ -124,26 +124,6 @@ export function connect(ctx: AudioContext) {
   osc.connect(env).connect(ctx.destination);
   osc.start(t0);
   osc.stop(t0 + 0.17);
-}
-
-/** A short burst of noise for a cut between speakers: band-limited, about
- *  1.5–6 kHz for a fifth of a second, like the swap in the game. */
-export function staticBurst(ctx: AudioContext) {
-  if (play(ctx, "static", 0.6) !== null) return;
-  const at = ctx.currentTime + 0.005;
-  const src = ctx.createBufferSource();
-  src.buffer = noiseBuffer(ctx, 0.22);
-  const band = ctx.createBiquadFilter();
-  band.type = "bandpass";
-  band.frequency.value = 3200;
-  band.Q.value = 0.55;
-  const env = ctx.createGain();
-  env.gain.setValueAtTime(0.0001, at);
-  env.gain.linearRampToValueAtTime(0.16, at + 0.01);
-  env.gain.setValueAtTime(0.16, at + 0.15);
-  env.gain.exponentialRampToValueAtTime(0.001, at + 0.22);
-  src.connect(band).connect(env).connect(ctx.destination);
-  src.start(at);
 }
 
 /** URL of the optional background track, a local file like the effects. */
