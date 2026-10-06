@@ -1,60 +1,57 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
-  // Transmission noise over the portrait of whoever is talking: thin horizontal
-  // lines flickering across it, now and then a torn band, and a faint bar
-  // rolling down the tube. It follows the voice: louder speech, more noise;
-  // silence, a clean picture.
+  // Transmission noise over the portrait of whoever is talking: a few soft
+  // horizontal lines drifting steadily up or down the picture, as on the
+  // codec. They brighten with the voice and fade out in silence.
   let { active = false, level = 0 }: { active?: boolean; level?: number } = $props();
 
   const W = 104;
   const H = 160;
+  const LINES = 3;
   let canvas: HTMLCanvasElement;
+
+  interface Line {
+    y: number;
+    speed: number; // canvas px per frame; negative runs up
+    thickness: number;
+    alpha: number;
+  }
+
+  const spawn = (y = Math.random() * H): Line => ({
+    y,
+    speed: (Math.random() < 0.5 ? -1 : 1) * (0.25 + Math.random() * 0.6),
+    thickness: 1 + Math.floor(Math.random() * 2),
+    alpha: 0.18 + Math.random() * 0.17,
+  });
 
   onMount(() => {
     const ctx = canvas.getContext("2d")!;
+    const lines = Array.from({ length: LINES }, () => spawn());
+    let strength = 0;
     let raf = 0;
-    let tick = 0;
-    let roll = 0;
     const frame = () => {
       raf = requestAnimationFrame(frame);
-      // About 30 fps is plenty for noise, and halves the work.
-      if (tick++ % 2) return;
+      // Ease towards the target so the lines fade rather than snap.
+      const target = active ? Math.min(1, 0.55 + level * 1.2) : 0;
+      strength += (target - strength) * 0.12;
       ctx.clearRect(0, 0, W, H);
-      if (!active) return;
-      const intensity = Math.min(1, 0.45 + level * 1.4);
-
-      // Lines: mostly bright, some dark, each a random stretch of one row.
-      const lines = Math.round(4 + intensity * 14);
-      for (let i = 0; i < lines; i++) {
-        const y = Math.floor(Math.random() * H);
-        const x = Math.floor(Math.random() * W * 0.35);
-        const len = Math.floor(W * (0.4 + Math.random() * 0.6));
-        const alpha = (0.3 + Math.random() * 0.5) * intensity;
-        ctx.fillStyle = Math.random() < 0.3 ? `rgba(0, 0, 0, ${alpha})` : `rgba(200, 255, 190, ${alpha})`;
-        ctx.fillRect(x, y, len, Math.random() < 0.2 ? 2 : 1);
-      }
-
-      // Now and then a torn band: a few rows of dense speckle.
-      if (Math.random() < 0.3 * intensity) {
-        const y = Math.floor(Math.random() * (H - 6));
-        const rows = 2 + Math.floor(Math.random() * 4);
-        for (let r = 0; r < rows; r++) {
-          for (let x = 0; x < W; x += 1 + Math.floor(Math.random() * 3)) {
-            const v = Math.random();
-            ctx.fillStyle = `rgba(${v > 0.5 ? "220, 255, 210" : "0, 0, 0"}, ${0.35 * intensity})`;
-            ctx.fillRect(x, y + r, 1, 1);
-          }
+      if (strength < 0.01) return;
+      for (const line of lines) {
+        line.y += line.speed;
+        // Off one edge: come back in from the other, sometimes reshuffled.
+        if (line.y < -4 || line.y > H + 4) {
+          Object.assign(line, Math.random() < 0.3 ? spawn() : {}, { y: line.y < 0 ? H + 3 : -3 });
         }
+        const a = line.alpha * strength;
+        const y = Math.round(line.y);
+        ctx.fillStyle = `rgba(200, 255, 190, ${a})`;
+        ctx.fillRect(0, y, W, line.thickness);
+        // A faint halo either side keeps the line soft.
+        ctx.fillStyle = `rgba(200, 255, 190, ${a * 0.35})`;
+        ctx.fillRect(0, y - 1, W, 1);
+        ctx.fillRect(0, y + line.thickness, W, 1);
       }
-
-      // A faint bar rolling slowly down the picture.
-      roll = (roll + 1.5) % (H + 24);
-      const grad = ctx.createLinearGradient(0, roll - 24, 0, roll);
-      grad.addColorStop(0, "rgba(200, 255, 190, 0)");
-      grad.addColorStop(1, `rgba(200, 255, 190, ${0.1 * intensity})`);
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, roll - 24, W, 24);
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
