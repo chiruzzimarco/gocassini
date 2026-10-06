@@ -140,17 +140,49 @@
   align-items: center;
 }
 
-/* Two thin rules running from one portrait to the other. */
-.codec .rail::before {
+/* The outline of the unit, as on the codec: one thin grey frame that runs
+ * behind both portraits and shows a little past their outer edges. PTT and
+ * MEMORY sit on its top and bottom edges, the centre of the tab rows. */
+.codec .unit::before {
   content: "";
   position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: calc(0.55 * var(--u));
-  transform: translateY(-50%);
-  border-top: 1px solid var(--rail);
-  border-bottom: 1px solid var(--rail);
+  z-index: 0;
+  left: calc(-1.4 * var(--u));
+  right: calc(-1.4 * var(--u));
+  top: calc(1.5 * var(--u));
+  bottom: calc(1.5 * var(--u));
+  border: 1px solid #3b4a40;
+  pointer-events: none;
+}
+
+.codec .seat,
+.codec .console {
+  position: relative;
+  z-index: 1;
+}
+
+/* Two short rules across the middle only, just inside the tabs, stopping
+ * short of the portraits on both sides. */
+.codec .tuner {
+  position: relative;
+}
+
+.codec .tuner::before,
+.codec .tuner::after {
+  content: "";
+  position: absolute;
+  left: calc(2.2 * var(--u));
+  right: calc(2.2 * var(--u));
+  border-top: 1px solid #2f3d33;
+  pointer-events: none;
+}
+
+.codec .tuner::before {
+  top: calc(0.1 * var(--u));
+}
+
+.codec .tuner::after {
+  bottom: calc(0.1 * var(--u));
 }
 
 .codec .ctab {
@@ -510,9 +542,11 @@
   }
 
   .codec .unit {
-    position: static;
+    position: relative;
+    left: auto;
+    top: auto;
     transform: none;
-    width: 96%;
+    width: 90%;
   }
 
   .codec .seat .name {
