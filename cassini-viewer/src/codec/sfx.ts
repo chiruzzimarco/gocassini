@@ -5,7 +5,19 @@
 // (ring.mp3, open.mp3, close.mp3; git-ignored, never committed, because the
 // originals are the game's audio) and falls back to a Web Audio imitation.
 
+import { readViewerBase } from "../viewer/appBase";
+
 type Sample = "ring" | "open" | "close";
+
+// Where the recordings are looked for: next to the page on the standalone
+// site; inside Nextcloud, under the app's own viewer/ path behind the AppAPI
+// proxy (the page itself is Nextcloud's, so a relative path finds nothing).
+function sampleUrl(name: Sample): string {
+  const proxyBase = readViewerBase();
+  return proxyBase
+    ? new URL(`viewer/codec-sfx/${name}.mp3`, proxyBase).toString()
+    : new URL(`codec-sfx/${name}.mp3`, document.baseURI).toString();
+}
 const samples = new Map<Sample, AudioBuffer>();
 let loading: Promise<void> | null = null;
 
@@ -13,7 +25,7 @@ let loading: Promise<void> | null = null;
 export function loadSamples(ctx: AudioContext): Promise<void> {
   loading ??= Promise.all(
     (["ring", "open", "close"] as const).map(async (name) => {
-      const url = new URL(`codec-sfx/${name}.mp3`, document.baseURI).toString();
+      const url = sampleUrl(name);
       try {
         const res = await fetch(url);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
