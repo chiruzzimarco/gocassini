@@ -15,6 +15,7 @@
 // little. With neither, the same picture is used throughout.
 
 import type { Portrait } from "./portrait";
+import { readViewerBase } from "../viewer/appBase";
 
 interface Entry {
   names: string[];
@@ -29,7 +30,12 @@ export type TeamPortraits = (label: string) => Portrait | undefined;
 
 /** Loads the site's known faces; resolves to a lookup that finds none if there are none. */
 export async function loadTeamPortraits(): Promise<TeamPortraits> {
-  const url = new URL("portraits/portraits.json", document.baseURI);
+  // Next to the page on the standalone site; inside Nextcloud, under the app's
+  // own viewer/ path behind the AppAPI proxy (the page is Nextcloud's).
+  const proxyBase = readViewerBase();
+  const url = proxyBase
+    ? new URL("viewer/portraits/portraits.json", proxyBase)
+    : new URL("portraits/portraits.json", document.baseURI);
   let entries: Entry[] = [];
   try {
     const res = await fetch(url, { cache: "no-store" });
